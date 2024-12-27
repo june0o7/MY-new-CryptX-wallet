@@ -42,7 +42,7 @@ function PayToContact(){
 
             <View style={styles.contactInnerBox}>
                 <Text>
-                    Alex Hembrom
+                    subhendu Dhali
                 </Text>
                 <Text>
                     Touch to open this contact

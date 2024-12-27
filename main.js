@@ -5,6 +5,7 @@ import ID from "./ID";
 import Wallet from "./Wallet";
 import Set from "./Set";
 import Ab from "./Ab";
+import Pay from "./pay"
 import PayToContact from "./PayToContact";
 import { Image, TouchableOpacity } from "react-native";
 
@@ -63,6 +64,20 @@ function Main() {
           },
         }}
       />
+      { <Drawer.Screen
+        name="pay"
+        component={Pay}
+        options={{
+          drawerIcon: () => {
+            return (
+              <Image
+                source={require("./assets/icons/home.png")}
+                style={{ height: 20, width: 20 }}
+              />
+            );
+          },
+        }}
+      /> }
       <Drawer.Screen
         name="Wallet"
         component={Wallet}
@@ -119,6 +134,21 @@ function Main() {
           },
         }}
       />
+
+{/* <Drawer.Screen
+        name="Login"
+        component={Login}
+        options={{
+          drawerIcon: ({ size }) => {
+            return (
+              <Image
+                source={require("./assets/icons/about.png")}
+                style={{ height: 20, width: 20 }}
+              />
+            );
+          },
+        }}
+      /> */}
       <Drawer.Screen
         name="Pay To Contact"
         component={PayToContact}

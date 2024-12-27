@@ -90,7 +90,8 @@ function SignUp(props) {
                 email : email,
                 password: password,
                 phone:phNo,
-                address:address
+                address:address,
+                DOB:DOB
         
         
                 };
@@ -98,6 +99,7 @@ function SignUp(props) {
                     const document= doc(db, "users", uid);
                     await setDoc(document, userDoc);
                     console.log("User created");
+                    navigator.navigate('Login'); 
 
            
                

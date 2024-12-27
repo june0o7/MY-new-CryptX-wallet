@@ -28,6 +28,20 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 
 function ID(props) {
+  const auth=getAuth(app);
+const db=getFirestore(app);
+const [data, setData]=useState({});
+
+async function fetch(){
+  const uid=auth.currentUser.uid;
+  console.log("UID: ", uid);
+const docRef = doc(db, "users", uid);
+const docSnap = await getDoc(docRef);
+setData(docSnap.data());
+
+console.log("Name: ",data.name);
+}
+    fetch();
   return (
     <View style={styles.container}>
    
@@ -65,8 +79,11 @@ function ID(props) {
         </Text>
       </View>
 
-      <Text style={{ color: "black", fontWeight: "bold", fontSize: 30, alignSelf:"center" }}>
+      {/* <Text style={{ color: "black", fontWeight: "bold", fontSize: 30, alignSelf:"center" }}>
         Mr. Rajdeep pal
+      </Text> */}
+      <Text style={{ color: "black", fontWeight: "bold", fontSize: 30, alignSelf:"center" }}>
+           Mr. {data && (data.name)}
       </Text>
      
       <View style={{flexDirection:"row", backgroundColor:'#e1e4e8', width:300, height:50, alignSelf:"center", marginTop:20, alignItems:"center", justifyContent:"center", borderRadius:20}}>
@@ -75,7 +92,7 @@ function ID(props) {
                 source={require('./assets/icons/phone.png')}
                 style={styles.icon}
                 />
-        <Text style={{ fontSize:20, marginLeft:10}}> 7449858122 </Text>
+        <Text style={{ fontSize:20, marginLeft:10}}> {data && (data.phone)} </Text>
       </View>
       <View style={{flexDirection:"row", backgroundColor:'#e1e4e8', width:300, height:50, alignSelf:"center", marginTop:20, alignItems:"center", justifyContent:"center", borderRadius:20}}>
         
@@ -83,7 +100,7 @@ function ID(props) {
                 source={require('./assets/icons/phone.png')}
                 style={styles.icon}
                 />
-        <Text style={{ fontSize:20, marginLeft:10}}> 7449858122 </Text>
+        <Text style={{ fontSize:20, marginLeft:10}}> {data && (data.DOB)} </Text>
       </View>
       <View style={{flexDirection:"row", backgroundColor:'#e1e4e8', width:300, height:50, alignSelf:"center", marginTop:20, alignItems:"center", justifyContent:"center", borderRadius:20}}>
         
@@ -91,7 +108,7 @@ function ID(props) {
                 source={require('./assets/icons/phone.png')}
                 style={styles.icon}
                 />
-        <Text style={{ fontSize:20, marginLeft:10}}> 7449858122 </Text>
+        <Text style={{ fontSize:20, marginLeft:10}}> {data && (data.address)} </Text>
       </View>
       <View style={{flexDirection:"row", backgroundColor:'#e1e4e8', width:300, height:50, alignSelf:"center", marginTop:20, alignItems:"center", justifyContent:"center", borderRadius:20}}>
         
@@ -99,7 +116,7 @@ function ID(props) {
                 source={require('./assets/icons/phone.png')}
                 style={styles.icon}
                 />
-        <Text style={{ fontSize:20, marginLeft:10}}> 7449858122 </Text>
+        <Text style={{ fontSize:20, marginLeft:10}}> {data && (data.email)} </Text>
       </View>
       <View style={{flexDirection:"row", backgroundColor:'#e1e4e8', width:300, height:50, alignSelf:"center", marginTop:20, alignItems:"center", justifyContent:"center", borderRadius:20}}>
         
@@ -107,7 +124,7 @@ function ID(props) {
                 source={require('./assets/icons/phone.png')}
                 style={styles.icon}
                 />
-        <Text style={{ fontSize:20, marginLeft:10}}> 7449858122 </Text>
+        {/* <Text style={{ fontSize:20, marginLeft:10}}> 7449858122 </Text> */}
       </View>
 
 
