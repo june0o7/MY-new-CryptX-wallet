@@ -5,151 +5,124 @@ import {
   View,
   Image,
   StatusBar,
-  TextInput,
-  Button,
   TouchableOpacity,
-  TouchableHighlight,
   ScrollView,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
-import firebase from "firebase/compat/app";
-import app from "./firebaseConfig";
-import { createUserWithEmailAndPassword, getAuth } from "firebase/auth";
-import { initializeApp } from "firebase/app";
-import {
-  collection,
-  Firestore,
-  addDoc,
-  getFirestore,
-  getDoc,
-  doc,
-  getDocs,
-} from "firebase/firestore";
+import { getAuth } from "firebase/auth";
+import { getFirestore, doc, getDoc } from "firebase/firestore";
 import { LinearGradient } from "expo-linear-gradient";
+import app from "./firebaseConfig";
 
 function ID(props) {
-  const auth=getAuth(app);
-const db=getFirestore(app);
-const [data, setData]=useState({});
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  const [data, setData] = useState({});
 
-async function fetch(){
-  const uid=auth.currentUser.uid;
-  console.log("UID: ", uid);
-const docRef = doc(db, "users", uid);
-const docSnap = await getDoc(docRef);
-setData(docSnap.data());
+  async function fetch() {
+    const uid = auth.currentUser.uid;
+    console.log("UID: ", uid);
+    const docRef = doc(db, "users", uid);
+    const docSnap = await getDoc(docRef);
+    setData(docSnap.data());
+    console.log("Name: ", data.name);
+  }
+  fetch();
 
-console.log("Name: ",data.name);
-}
-    fetch();
   return (
     <View style={styles.container}>
-   
-      <View
-        style={{
-          padding: 10,
-          marginTop: 10,
-          flexDirection: "row",
-          justifyContent: "space-evenly",
-        }}
-      >
+      <View style={styles.profileContainer}>
         <TouchableOpacity style={styles.button}>
-          <Image
-            source={require("./assets/icons/pp.jpg")}
-            style={styles.image}
-          />
+          <Image source={require("./assets/icons/pp.jpg")} style={styles.image} />
         </TouchableOpacity>
       </View>
       <View style={styles.userid}>
-        <Text
-          style={{
-            fontWeight: "bold",
-            padding: 3,
-            justifyContent: "center",
-            backgroundColor: "#e8e9eb",
-            borderRadius: 8,
-            width: 110,
-            height: 20,
-            alignItems: "center",
-            fontSize: 10,
-            color: "black",
-          }}
-        >
-          User ID : 1120210@cr
-        </Text>
+        <Text style={styles.useridText}>User ID : 1120210@cr</Text>
       </View>
+      <Text style={styles.nameText}>Mr. {data && data.name}</Text>
+      
+      <LinearGradient colors={["#16213E", "#1A1A2E"]} style={styles.infoCard}>
+        <Image source={require("./assets/icons/phone.png")} style={styles.icon} />
+        <Text style={styles.infoText}>{data && data.phone}</Text>
+      </LinearGradient>
 
-      {/* <Text style={{ color: "black", fontWeight: "bold", fontSize: 30, alignSelf:"center" }}>
-        Mr. Rajdeep pal
-      </Text> */}
-      <Text style={{ color: "black", fontWeight: "bold", fontSize: 30, alignSelf:"center" }}>
-           Mr. {data && (data.name)}
-      </Text>
-     
-      <View style={{flexDirection:"row", backgroundColor:'#e1e4e8', width:300, height:50, alignSelf:"center", marginTop:20, alignItems:"center", justifyContent:"center", borderRadius:20}}>
-        
-      <Image 
-                source={require('./assets/icons/phone.png')}
-                style={styles.icon}
-                />
-        <Text style={{ fontSize:20, marginLeft:10}}> {data && (data.phone)} </Text>
-      </View>
-      <View style={{flexDirection:"row", backgroundColor:'#e1e4e8', width:300, height:50, alignSelf:"center", marginTop:20, alignItems:"center", justifyContent:"center", borderRadius:20}}>
-        
-      <Image 
-                source={require('./assets/icons/phone.png')}
-                style={styles.icon}
-                />
-        <Text style={{ fontSize:20, marginLeft:10}}> {data && (data.DOB)} </Text>
-      </View>
-      <View style={{flexDirection:"row", backgroundColor:'#e1e4e8', width:300, height:50, alignSelf:"center", marginTop:20, alignItems:"center", justifyContent:"center", borderRadius:20}}>
-        
-      <Image 
-                source={require('./assets/icons/phone.png')}
-                style={styles.icon}
-                />
-        <Text style={{ fontSize:20, marginLeft:10}}> {data && (data.address)} </Text>
-      </View>
-      <View style={{flexDirection:"row", backgroundColor:'#e1e4e8', width:300, height:50, alignSelf:"center", marginTop:20, alignItems:"center", justifyContent:"center", borderRadius:20}}>
-        
-      <Image 
-                source={require('./assets/icons/phone.png')}
-                style={styles.icon}
-                />
-        <Text style={{ fontSize:20, marginLeft:10}}> {data && (data.email)} </Text>
-      </View>
-      <View style={{flexDirection:"row", backgroundColor:'#e1e4e8', width:300, height:50, alignSelf:"center", marginTop:20, alignItems:"center", justifyContent:"center", borderRadius:20}}>
-        
-      <Image 
-                source={require('./assets/icons/phone.png')}
-                style={styles.icon}
-                />
-        {/* <Text style={{ fontSize:20, marginLeft:10}}> 7449858122 </Text> */}
-      </View>
+      <LinearGradient colors={["#16213E", "#1A1A2E"]} style={styles.infoCard}>
+        <Image source={require("./assets/icons/dob.png")} style={styles.icon} />
+        <Text style={styles.infoText}>{data && data.DOB}</Text>
+      </LinearGradient>
 
+      <LinearGradient colors={["#16213E", "#1A1A2E"]} style={styles.infoCard}>
+        <Image source={require("./assets/icons/address.png")} style={styles.icon} />
+        <Text style={styles.infoText}>{data && data.address}</Text>
+      </LinearGradient>
 
+      <LinearGradient colors={["#16213E", "#1A1A2E"]} style={styles.infoCard}>
+        <Image source={require("./assets/icons/mail.png")} style={styles.icon} />
+        <Text style={styles.infoText}>{data && data.email}</Text>
+      </LinearGradient>
     </View>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "white",
+    backgroundColor: "#1A1A2E",
     padding: 10,
+  },
+  profileContainer: {
+    padding: 10,
+    marginTop: 10,
+    flexDirection: "row",
+    justifyContent: "center",
   },
   image: {
     borderRadius: 100,
     width: 100,
     height: 100,
-  },
-  icon: {
-    padding: 10,
-    borderRadius: 100,
-    width: 40,
-    height: 40,
+    borderWidth: 3,
+    borderColor: "#00FFEA",
   },
   userid: {
     alignItems: "center",
+    marginTop: 10,
+  },
+  useridText: {
+    fontWeight: "bold",
+    padding: 5,
+    backgroundColor: "#16213E",
+    borderRadius: 8,
+    fontSize: 12,
+    color: "#00FFEA",
+    textAlign: "center",
+  },
+  nameText: {
+    color: "#00FFEA",
+    fontWeight: "bold",
+    fontSize: 28,
+    alignSelf: "center",
+    marginTop: 10,
+  },
+  infoCard: {
+    flexDirection: "row",
+    width: 300,
+    height: 50,
+    alignSelf: "center",
+    marginTop: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 15,
+    paddingHorizontal: 10,
+  },
+  icon: {
+    width: 30,
+    height: 30,
+    tintColor: "#00FFEA",
+  },
+  infoText: {
+    fontSize: 18,
+    marginLeft: 10,
+    color: "#00FFEA",
   },
 });
+
 export default ID;

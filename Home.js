@@ -29,137 +29,108 @@ import { LinearGradient } from "expo-linear-gradient";
 
 function Home(props) {
   return (
-    <View style={styles.container}>
-      <View
-        style={{ backgroundColor: "#21ffcf", borderRadius: 20, padding: 10 }}
-      >
-        <Text style={{ color: "black", fontWeight: "bold", fontSize: 30 }}>
-          Hello, USER !
-        </Text>
-        <Text style={{ color: "#2c2e2e", fontSize: 15, marginTop: 10 }}>
-          Total Balance
-        </Text>
+    <LinearGradient
+      colors={["#0A0A0A", "#1A1A2E", "#16213E"]}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={styles.background}
+    >
+      <View style={styles.container}>
+        <View style={styles.balanceContainer}>
+          <Text style={styles.greetingText}>Hello, USER!</Text>
+          <Text style={styles.balanceLabel}>Total Balance</Text>
+          <Text style={styles.balanceAmount}>$10,000.00</Text>
+          <View style={styles.marketGrowthContainer}>
+            <Text style={styles.marketGrowthText}>Market Growth: 4.7%</Text>
+          </View>
 
-        <Text style={{ color: "black", fontSize: 25, marginTop: 3 }}>
-          $10,000.00
-        </Text>
-        <Text
-          style={{
-            fontWeight: "bold",
-            padding: 2,
-            backgroundColor: "#2c2e2e",
-            borderRadius: 10,
-            width: 110,
-            height: 20,
-            alignItems: "center",
-            fontSize: 10,
-            color: "#21ffcf",
-          }}
-        >
-          Market Growth: 4.7%
-        </Text>
-
-        <View
-          style={{
-            padding: 10,
-            marginTop: 10,
-            flexDirection: "row",
-            justifyContent: "space-evenly",
-          }}
-        >
-          <TouchableOpacity style={styles.button}>
-            <Image
-              source={require("./assets/icons/uparrow.png")}
-              style={styles.image}
-            />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.button}>
-            <Image
-              source={require("./assets/icons/downarrow.png")}
-              style={styles.image}
-            />
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.button}>
-            <Image
-              source={require("./assets/icons/mg.png")}
-              style={styles.image}
-            />
-          </TouchableOpacity>
+          <View style={styles.buttonRow}>
+            <TouchableOpacity style={styles.iconButton}>
+              <Image
+                source={require("./assets/icons/uparrow.png")}
+                style={styles.iconImage}
+              />
+              <Text style={styles.iconText}>Send</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.iconButton}>
+              <Image
+                source={require("./assets/icons/downarrow.png")}
+                style={styles.iconImage}
+              />
+              <Text style={styles.iconText}>Receive</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.iconButton}>
+              <Image
+                source={require("./assets/icons/mg.png")}
+                style={styles.iconImage}
+              />
+              <Text style={styles.iconText}>Find</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-        <View style={styles.buttonDescription}>
-          <Text>Send </Text>
-          <Text>Receive </Text>
-          <Text>Find </Text>
+
+        <Text style={styles.sectionHeader}>Popular</Text>
+        <View style={styles.popularContainer}>
+          <ScrollView horizontal={true} showsHorizontalScrollIndicator={false}>
+            <TouchableOpacity style={styles.popularItem}>
+              <Image
+                source={require("./assets/images/eth.jpg")}
+                style={styles.popularImage}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.popularItem}>
+              <Image
+                source={require("./assets/images/dbi.jpg")}
+                style={styles.popularImage}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.popularItem}>
+              <Image
+                source={require("./assets/images/eth.jpg")}
+                style={styles.popularImage}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.popularItem}>
+              <Image
+                source={require("./assets/images/dbi.jpg")}
+                style={styles.popularImage}
+              />
+            </TouchableOpacity>
+          </ScrollView>
         </View>
-      </View>
-      <Text
-        style={{
-          fontWeight: "bold",
-          padding: 5,
-          width: 90,
-          alignItems: "center",
-          color: "white",
-          fontSize: 18,
-        }}
-      >
-        Popular
-      </Text>
 
-      <View  style={{ backgroundColor: "#21ffcf", borderRadius: 20, paddingLeft: 5, paddingRight:5 }}>
-        <ScrollView
-         
-          horizontal={true}
-          showsHorizontalScrollIndicator={false}
-        >
-          <TouchableOpacity style={{ margin: 10, height: 110 }}>
-            <Image
-              source={require("./assets/images/eth.jpg")}
-              style={{ width: 200, height: 100 }}
-            />
-          </TouchableOpacity>
-          <TouchableOpacity style={{ margin: 10, height: 110 }}>
-            <Image
-              source={require("./assets/images/dbi.jpg")}
-              style={{ width: 200, height: 100 }}
-            />
-          </TouchableOpacity>
-          <TouchableOpacity style={{ margin: 10, height: 110 }}>
-            <Image
-              source={require("./assets/images/eth.jpg")}
-              style={{ width: 200, height: 100 }}
-            />
-          </TouchableOpacity>
-          <TouchableOpacity style={{ margin: 10, height: 110 }}>
-            <Image
-              source={require("./assets/images/dbi.jpg")}
-              style={{ width: 200, height: 100 }}
-            />
-          </TouchableOpacity>
-        </ScrollView>
-      </View>
+        <Text style={styles.sectionHeader}>Businesses</Text>
+        <View style={styles.businessesContainer}>
+          {/* <ScrollView horizontal={true} showsHorizontalScrollIndicator={false}>
+            {[
+              "jio-logo-icon",
+              "zomato",
+              "swiggy",
+              "bms",
+              "lenskart",
+              "jio-logo-icon",
+              "zomato",
+              "swiggy",
+              "bms",
+              "lenskart",
+            ].map((icon, index) => (
+              <TouchableOpacity key={index} style={styles.businessIcon}>
+                <Image
+                  source={require(`./assets/icons/${icon}.png`)}
+                  style={styles.businessImage}
+                />
+              </TouchableOpacity>
+            ))}
+          </ScrollView> */}
 
-      <Text
-        style={{
-          fontWeight: "bold",
-          padding: 5,
-          width: 120,
-          alignItems: "center",
-          color: "white",
-          fontSize: 18,
-        }}
-      >
-        Businesses{" "}
-      </Text>
-      <View
-        style={{
-          borderColor: "black",
-          borderWidth: 1,
-          borderRadius: 5,
-          padding: 5,
-        }}
-      >
-        <ScrollView horizontal={true} showsHorizontalScrollIndicator={false}>
+
+
+
+
+
+
+
+<ScrollView horizontal={true} showsHorizontalScrollIndicator={false}>
           <TouchableOpacity>
             <Image
               source={require("./assets/icons/jio-logo-icon.png")}
@@ -230,213 +201,153 @@ function Home(props) {
             />
           </TouchableOpacity>
         </ScrollView>
-      </View>
+        </View>
 
-      <View style={styles.transactions}>
-        <Text style={{ color: "white", fontWeight:"bold"}}>People</Text>
-
-        <View style={{ flexDirection: "row", flexWrap:"wrap", justifyContent:"space-evenly" }}>
-
-          <TouchableOpacity style={{marginLeft:2, marginRight:2}}>
-          <View style={{}}>
-            <Image
-              source={require("./assets/icons/profile.png")}
-              style={{ width: 50, height: 50, margin: 5 }}
-            />
-
-            <Text
-              style={{ color: "white", width: 60 }}
-              ellipsizeMode="tail"
-              numberOfLines={1}
-            >
-              Rajdeep
-            </Text>
-          </View>
-          </TouchableOpacity>
-          <TouchableOpacity style={{marginLeft:2, marginRight:2}}>
-          <View style={{}}>
-            <Image
-              source={require("./assets/icons/profile.png")}
-              style={{ width: 50, height: 50, margin: 5 }}
-            />
-
-            <Text
-              style={{ color: "white", width: 60 }}
-              ellipsizeMode="tail"
-              numberOfLines={1}
-            >
-              Rumpa
-            </Text>
-          </View>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={{marginLeft:2, marginRight:2}}>
-          <View style={{}}>
-            <Image
-              source={require("./assets/icons/profile.png")}
-              style={{ width: 50, height: 50, margin: 5 }}
-            />
-
-            <Text
-              style={{ color: "white", width: 60 }}
-              ellipsizeMode="tail"
-              numberOfLines={1}
-            >
-              Rangan Nath
-            </Text>
-          </View>
-          </TouchableOpacity>
-          <TouchableOpacity style={{marginLeft:2, marginRight:2}}>
-          <View style={{}}>
-            <Image
-              source={require("./assets/icons/profile.png")}
-              style={{ width: 50, height: 50, margin: 5 }}
-            />
-
-            <Text
-              style={{ color: "white", width: 60 }}
-              ellipsizeMode="tail"
-              numberOfLines={1}
-            >
-              Shyan mandal
-            </Text>
-          </View>
-          </TouchableOpacity>
-          <TouchableOpacity style={{marginLeft:2, marginRight:2}}>
-          <View style={{}}>
-            <Image
-              source={require("./assets/icons/profile.png")}
-              style={{ width: 50, height: 50, margin: 5 }}
-            />
-
-            <Text
-              style={{ color: "white", width: 60 }}
-              ellipsizeMode="tail"
-              numberOfLines={1}
-            >
-              Saptarshi Mandal
-            </Text>
-          </View>
-          </TouchableOpacity>
-          <TouchableOpacity style={{marginLeft:2, marginRight:2}}>
-          <View style={{}}>
-            <Image
-              source={require("./assets/icons/profile.png")}
-              style={{ width: 50, height: 50, margin: 5 }}
-            />
-
-            <Text
-              style={{ color: "white", width: 60 }}
-              ellipsizeMode="tail"
-              numberOfLines={1}
-            >
-              Sradha
-            </Text>
-          </View>
-          </TouchableOpacity>
-          <TouchableOpacity style={{marginLeft:2, marginRight:2}}>
-          <View style={{}}>
-            <Image
-              source={require("./assets/icons/profile.png")}
-              style={{ width: 50, height: 50, margin: 5 }}
-            />
-
-            <Text
-              style={{ color: "white", width: 60 }}
-              ellipsizeMode="tail"
-              numberOfLines={1}
-            >
-              Riya pal
-            </Text>
-          </View>
-          </TouchableOpacity>
-          <TouchableOpacity style={{marginLeft:2, marginRight:2}}>
-          <View style={{}}>
-            <Image
-              source={require("./assets/icons/profile.png")}
-              style={{ width: 50, height: 50, margin: 5 }}
-            />
-
-            <Text
-              style={{ color: "white", width: 60 }}
-              ellipsizeMode="tail"
-              numberOfLines={1}
-            >
-              Subhadeep pal
-            </Text>
-          </View>
-          </TouchableOpacity>
-          <TouchableOpacity style={{marginLeft:2, marginRight:2}}>
-          <View style={{}}>
-            <Image
-              source={require("./assets/icons/profile.png")}
-              style={{ width: 50, height: 50, margin: 5 }}
-            />
-
-            <Text
-              style={{ color: "white", width: 60 }}
-              ellipsizeMode="tail"
-              numberOfLines={1}
-            >
-              Soumik 
-            </Text>
-          </View>
-          </TouchableOpacity>
-          <TouchableOpacity style={{marginLeft:2, marginRight:2}}>
-          <View style={{}}>
-            <Image
-              source={require("./assets/icons/profile.png")}
-              style={{ width: 50, height: 50, margin: 5 }}
-            />
-
-            <Text
-              style={{ color: "white", width: 60 }}
-              ellipsizeMode="tail"
-              numberOfLines={1}
-            >
-              Rajesh patra
-            </Text>
-          </View>
-          </TouchableOpacity>
-
-          
+        <Text style={styles.sectionHeader}>People</Text>
+        <View style={styles.peopleContainer}>
+          {[
+            "Rajdeep",
+            "Rumpa",
+            "Rangan Nath",
+            "Shyan Mandal",
+            "Saptarshi Mandal",
+            "Sradha",
+            "Riya Pal",
+            "Subhadeep Pal",
+            "Soumik",
+            "Rajesh Patra",
+          ].map((name, index) => (
+            <TouchableOpacity key={index} style={styles.personItem}>
+              <Image
+                source={require("./assets/icons/profile.png")}
+                style={styles.personImage}
+              />
+              <Text style={styles.personName}>{name}</Text>
+            </TouchableOpacity>
+          ))}
         </View>
       </View>
-    </View>
+    </LinearGradient>
   );
 }
+
 const styles = StyleSheet.create({
+  background: {
+    flex: 1,
+  },
   container: {
     flex: 1,
-    backgroundColor: "#121212",
-    padding: 10,
+    padding: 20,
   },
-
-  button: {
-    backgroundColor: "white",
-    width: 50,
-    height: 50,
+  balanceContainer: {
+    backgroundColor: "#1A1A2E",
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 20,
+  },
+  greetingText: {
+    color: "#00FFEA",
+    fontSize: 30,
+    fontWeight: "bold",
+  },
+  balanceLabel: {
+    color: "#00FFEA",
+    fontSize: 15,
+    marginTop: 10,
+  },
+  balanceAmount: {
+    color: "#00FFEA",
+    fontSize: 25,
+    marginTop: 5,
+  },
+  marketGrowthContainer: {
+    backgroundColor: "#00FFEA",
     borderRadius: 10,
-    justifyContent: "center",
-    alignItems: "center",
-    borderColor: "black",
-    borderWidth: 1,
-    padding: 0,
+    padding: 5,
+    width: 110,
+    marginTop: 10,
   },
-  image: {
-    borderRadius: 7,
+  marketGrowthText: {
+    color: "#0A0A0A",
+    fontSize: 10,
+    fontWeight: "bold",
+    textAlign: "center",
+  },
+  buttonRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 20,
+    // backgroundColor:"#00FFEA",
+  },
+  iconButton: {
+    alignItems: "center",
+    // backgroundColor:"#00FFEA",
+
+  },
+  iconImage: {
     width: 30,
     height: 30,
-    borderColor: "black",
+    // color:"#00FFEA",
+    
   },
-
-  buttonDescription: {
-    flexDirection: "row",
-    justifyContent: "space-evenly",
+  iconText: {
+    color: "#00FFEA",
+    fontSize: 12,
+    marginTop: 5,
   },
-
-  transactions: {
+  sectionHeader: {
+    color: "#00FFEA",
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 10,
+  },
+  popularContainer: {
+    backgroundColor: "#1A1A2E",
+    borderRadius: 20,
     padding: 10,
+    marginBottom: 20,
+  },
+  popularItem: {
+    margin: 10,
+  },
+  popularImage: {
+    width: 200,
+    height: 100,
+    borderRadius: 15,
+  },
+  businessesContainer: {
+    backgroundColor: "#1A1A2E",
+    borderRadius: 20,
+    padding: 10,
+    marginBottom: 20,
+  },
+  businessIcon: {
+    margin: 5,
+  },
+  businessImage: {
+    width: 50,
+    height: 50,
+  },
+  peopleContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+  },
+  personItem: {
+    alignItems: "center",
+    marginBottom: 10,
+    width: "30%",
+  },
+  personImage: {
+    width: 50,
+    height: 50,
+  },
+  personName: {
+    color: "#FFFFFF",
+    fontSize: 12,
+    marginTop: 5,
+    textAlign: "center",
   },
 });
+
 export default Home;

@@ -1,44 +1,68 @@
-import { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, Image,StatusBar, TextInput, Button, TouchableOpacity, TouchableHighlight, ScrollView } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import firebase from 'firebase/compat/app';
-import app from './firebaseConfig';
-import { createUserWithEmailAndPassword ,getAuth } from 'firebase/auth';
-import { initializeApp ,} from 'firebase/app';
-import { collection, Firestore, addDoc, getFirestore , getDoc, doc, getDocs} from 'firebase/firestore';
+import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
 function Set(props) {
-return(
-    <View style={styles.container}>
-        <Text style={{color:'black', fontWeight:'bold', fontSize:30}}>
-             Settings..
-          </Text>
+    const handlePress = (section) => {
+        // Add your navigation/handling logic here
+        console.log(`Pressed: ${section}`);
+    };
 
-          <View style={{padding:10, marginTop:10, flexDirection:'row', justifyContent:'space-evenly'}}>
-            
-            <Image 
-                source={require('./assets/icons/ss.jpg')}
-                style={styles.image}
-                />
+    return (
+        <LinearGradient
+            colors={['#0A0A0A', '#1A1A2E', '#16213E']}
+            style={styles.container}
+        >
+            <View style={styles.content}>
+                <TouchableOpacity style={styles.button} onPress={() => handlePress('Personal Info')}>
+                    <Text style={styles.buttonText}>Personal Info</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.button} onPress={() => handlePress('Notifications')}>
+                    <Text style={styles.buttonText}>Notifications</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.button} onPress={() => handlePress('Privacy and Security')}>
+                    <Text style={styles.buttonText}>Privacy and Security</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.button} onPress={() => handlePress('Help & Feedback')}>
+                    <Text style={styles.buttonText}>Help & Feedback</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.button} onPress={() => handlePress('Lock App')}>
+                    <Text style={styles.buttonText}>Lock App</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={[styles.button, styles.signOutButton]} onPress={() => handlePress('Sign Out')}>
+                    <Text style={styles.buttonText}>Sign Out</Text>
+                </TouchableOpacity>
             </View>
-    </View>
-);
+        </LinearGradient>
+    );
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor:'white',
-        padding:10,
-      },
-      image:{
-        borderRadius:2,
-        width:250,
-        height:160,
-  
-      },
+    },
+    content: {
+        flex: 1,
+        padding: 20,
+        justifyContent: 'center',
+    },
+    button: {
+        backgroundColor: '#1A1A2E',
+        padding: 20,
+        borderRadius: 15,
+        marginVertical: 10,
+        borderWidth: 2,
+        borderColor: '#00FFEA',
+        alignItems: 'center',
+    },
+    buttonText: {
+        color: '#00FFEA',
+        fontSize: 18,
+        fontWeight: 'bold',
+    },
+    signOutButton: {
+        borderColor: '#FF5733', // Orange border for Sign Out button
+        backgroundColor: '#2A0A0A', // Darker background for Sign Out button
+    },
+});
 
-    })
-    export default Set;
-    
+export default Set;

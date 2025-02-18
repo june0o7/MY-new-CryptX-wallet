@@ -6,8 +6,10 @@ import { createNavigatorFactory, NavigationContainer} from '@react-navigation/na
 import { createStackNavigator } from '@react-navigation/stack';
 import SignUp from './SignUp';
 import Home from './Home';
+import 'react-native-get-random-values';
 // import MyComponent from './MyComponent';
 import Main from './main';
+// import Tudung from './tudung';
 
 
 
@@ -20,11 +22,12 @@ export default function App() {
   return (
       
     <NavigationContainer>
-      <stack.Navigator initialRouteName='Main'>
+      <stack.Navigator initialRouteName='Login'>
         <stack.Screen name='Login' component={Login} options={{headerShown:false}}/>
         <stack.Screen name='SignUp'  component={SignUp} options={{headerShown:false}}/>
         <stack.Screen name='Home' component={Home} options={{headerShown:false}}/>
         <stack.Screen name='Main' component={Main} options={{headerShown:false}}/>
+        {/* <stack.Screen name='tudung' component={tudung} options={{headerShown:false}}/> */}
        
       </stack.Navigator>
     </NavigationContainer>
