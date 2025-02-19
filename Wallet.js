@@ -101,9 +101,9 @@ const styles = StyleSheet.create({
     },
     balanceText: {
         fontSize: 24,
+        marginBottom: 20,
         fontWeight: 'bold',
         color: '#00FFEA', // Neon blue text
-        marginBottom: 20,
         textShadowColor: '#00FFEA', // Neon glow effect
         textShadowOffset: { width: 0, height: 0 },
         textShadowRadius: 10,

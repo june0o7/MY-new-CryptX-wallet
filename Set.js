@@ -58,6 +58,11 @@ const styles = StyleSheet.create({
         color: '#00FFEA',
         fontSize: 18,
         fontWeight: 'bold',
+        // fontWeight: 'bold',
+        // color: '#00FFEA', // Neon blue text
+        textShadowColor: '#00FFEA', // Neon glow effect
+        textShadowOffset: { width: 0, height: 0 },
+        textShadowRadius: 10,
     },
     signOutButton: {
         borderColor: '#FF5733', // Orange border for Sign Out button

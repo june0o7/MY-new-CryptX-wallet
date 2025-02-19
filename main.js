@@ -7,7 +7,9 @@ import Set from "./Set";
 import Ab from "./Ab";
 import Pay from "./pay";
 import PayToContact from "./PayToContact";
-import { Image, TouchableOpacity } from "react-native";
+import { Image, TouchableOpacity,StyleSheet } from "react-native";
+// import { StyleSheet, TouchableOpacity, Image } from "react-native";
+
 
 function Main() {
   const Drawer = createDrawerNavigator();
@@ -26,15 +28,17 @@ function Main() {
           borderRadius: 10, // Rounded corners for drawer items
         },
         headerStyle: {
-          backgroundColor: "#121212", // Dark background for the header
-          shadowColor: "#121212",
+          backgroundColor: "#0A0A0A", // Dark background for the header
+          shadowColor: "#00FFEA",
+          shadowRadius:10,
         },
-        headerTintColor: "#00FFEA", // White text for the header
+        headerTintColor: "#00FFEA", // neon text for the header
         headerRight: () => (
-          <TouchableOpacity>
+          <TouchableOpacity style={styles.iconContainer}>
             <Image
               source={require("./assets/icons/profile.png")}
-              style={{ height: 40, width: 40, marginRight: 10}} // Neon blue tint for the profile icon
+              // style={{ height: 40, width: 40, marginRight: 10}}
+               style={styles.iconImage} // Neon blue tint for the profile icon
             />
           </TouchableOpacity>
         ),
@@ -128,5 +132,25 @@ function Main() {
     </Drawer.Navigator>
   );
 }
+const styles = StyleSheet.create({
+  iconContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    // backgroundColor: "#00FFEA", // Neon blue base
+    borderRadius: 50, // Circular glow
+    padding: 5,
+    shadowColor: "#00FFFF", // Neon cyan glow effect
+    shadowOffset: { width: 5, height: 5 },
+    shadowOpacity: 10,
+    shadowRadius: 5,
+    elevation: 5, // Android shadow
+  },
+  iconImage: {
+    height: 40,
+    width: 40,
+    // tintColor: "#00FFEA", // Neon tint
+  },
+});
+
 
 export default Main;
