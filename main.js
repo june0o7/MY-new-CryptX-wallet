@@ -8,6 +8,7 @@ import Ab from "./Ab";
 import Pay from "./pay";
 import PayToContact from "./PayToContact";
 import { Image, TouchableOpacity,StyleSheet } from "react-native";
+import Login from "./Login";
 // import { StyleSheet, TouchableOpacity, Image } from "react-native";
 
 
@@ -123,6 +124,18 @@ function Main() {
           drawerIcon: () => (
             <Image
               source={require("./assets/icons/about.png")}
+              style={{ height: 20, width: 20, tintColor: "#00FFEA" }} // Neon blue tint for the icon
+            />
+          ),
+        }}
+      />
+      <Drawer.Screen
+        name="Logout"
+        component={Login}
+        options={{
+          drawerIcon: () => (
+            <Image
+              source={require("./assets/icons/log.png")}
               style={{ height: 20, width: 20, tintColor: "#00FFEA" }} // Neon blue tint for the icon
             />
           ),

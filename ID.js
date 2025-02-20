@@ -26,7 +26,12 @@ function ID(props) {
     setData(docSnap.data());
     console.log("Name: ", data.name);
   }
-  fetch();
+  
+
+  useEffect(()=>{
+fetch();
+
+  },[]);
 
   return (
     <View style={styles.container}>

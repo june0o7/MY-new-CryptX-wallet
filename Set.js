@@ -1,10 +1,13 @@
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import Login from './Login';
+import { Component } from 'react';
 
 function Set(props) {
     const handlePress = (section) => {
         // Add your navigation/handling logic here
         console.log(`Pressed: ${section}`);
+        // Component={Login};
     };
 
     return (
@@ -28,7 +31,7 @@ function Set(props) {
                 <TouchableOpacity style={styles.button} onPress={() => handlePress('Lock App')}>
                     <Text style={styles.buttonText}>Lock App</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={[styles.button, styles.signOutButton]} onPress={() => handlePress('Sign Out')}>
+                <TouchableOpacity style={[styles.button, styles.signOutButton]} onPress={() => handlePress('Login')}>
                     <Text style={styles.buttonText}>Sign Out</Text>
                 </TouchableOpacity>
             </View>
