@@ -27,7 +27,68 @@ import {
 } from "firebase/firestore";
 import { LinearGradient } from "expo-linear-gradient";
 
-function Home(props) {
+// import Pay from "./pay";
+import { 
+  ActivityIndicator 
+} from "react-native";
+
+import { auth, db } from "./firebaseConfig";
+
+
+function Home({ navigation }) {
+
+
+  //......................
+
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  const [data, setData] = useState({});
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  // Add loading state
+const [refreshing, setRefreshing] = useState(false);
+
+// Update handleRefresh
+
+
+// Add activity indicator
+{refreshing && <ActivityIndicator color="#00FFEA" style={styles.loadingIndicator} />}
+
+  const fetchData = async () => {
+    try {
+        const user = auth.currentUser;
+        if (!user) return;
+        
+        const docRef = doc(db, "users", user.uid);
+        const docSnap = await getDoc(docRef);
+        
+        if (docSnap.exists()) {
+            setData(docSnap.data());
+        }
+    } catch (error) {
+        console.error("Fetch error:", error);
+        Alert.alert("Error", "Failed to refresh data");
+    }
+};
+  
+
+useEffect(() => {
+  fetchData();
+}, [refreshTrigger]); // Add refreshTrigger as dependency
+
+// Add refresh handler function
+const handleRefresh = () => {
+  setRefreshTrigger(prev => prev + 1);
+};
+
+
+  //.....................
+
+
+
+
+
+  //.......................
   return (
     <LinearGradient
       colors={["#0A0A0A", "#1A1A2E", "#16213E"]}
@@ -39,27 +100,35 @@ function Home(props) {
         <View style={styles.container}>
           {/* Existing Balance Section */}
           <View style={styles.balanceContainer}>
-            <Text style={styles.greetingText}>Hello, USER!</Text>
+            <Text style={styles.greetingText}>Hello, {data && data.name}!</Text>
             <Text style={styles.balanceLabel}>Total Balance</Text>
-            <Text style={styles.balanceAmount}>$10,000.00</Text>
+            <Text style={styles.balanceAmount}>{data && data.balance} ETH 
+              
+            </Text>
+            <TouchableOpacity 
+    onPress={handleRefresh}
+    style={styles.refreshButton}
+>
+    <Text style={styles.refreshButtonText}>↻</Text>
+</TouchableOpacity>
             <View style={styles.marketGrowthContainer}>
               <Text style={styles.marketGrowthText}>Market Growth: 4.7%</Text>
             </View>
 
             <View style={styles.buttonRow}>
-              <TouchableOpacity style={styles.iconButton}>
+              <TouchableOpacity style={styles.iconButton}onPress={() => navigation.navigate('Pay')}>
                 <Image
                   source={require("./assets/icons/uparrow.png")}
                   style={styles.iconImage}
                 />
                 <Text style={styles.iconText}>Send</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.iconButton}>
+              <TouchableOpacity style={styles.iconButton}onPress={() => navigation.navigate('Wallet')}>
                 <Image
                   source={require("./assets/icons/downarrow.png")}
                   style={styles.iconImage}
                 />
-                <Text style={styles.iconText}>Receive</Text>
+                <Text style={styles.iconText}>Add</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.iconButton}>
                 <Image
@@ -322,6 +391,7 @@ const styles = StyleSheet.create({
   iconImage: {
     width: 30,
     height: 30,
+    tintColor: "#00FFEA",
   },
   iconText: {
     color: "#00FFEA",
@@ -409,6 +479,11 @@ const styles = StyleSheet.create({
     padding: 15,
     marginBottom: 20,
   },
+  loadingIndicator: {
+    position: 'absolute',
+    right: 20,
+    top: 20,
+},
   transactionItem: {
     color: "#FFFFFF",
     fontSize: 14,
@@ -428,6 +503,21 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
   },
+  refreshButton: {
+    position: 'absolute',
+    right: 20,
+    top: 20,
+    padding: 10,
+    borderRadius: 30,
+    backgroundColor: '#1A1A2E',
+    borderWidth: 2,
+    borderColor: '#00FFEA',
+},
+refreshButtonText: {
+    color: '#00FFEA',
+    fontSize: 20,
+    fontWeight: 'bold',
+},
   personName: {
     color: "#FFFFFF",
     fontSize: 12,

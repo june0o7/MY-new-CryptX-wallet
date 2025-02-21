@@ -10,7 +10,10 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 
 const Wallet = () => {
-    const ganacheUrl = "http://192.168.0.172:7545";
+    
+    const ganacheUrl = "http://192.168.29.107:7545";
+    // const ganacheUrl = "HTTP://192.168.29.107:7545";
+    // const ganacheUrl = "http://192.168.0.172:7545";
     const provider = new ethers.JsonRpcProvider(ganacheUrl, {
         name: 'ganache',
         chainId: 1337,
@@ -22,34 +25,87 @@ const Wallet = () => {
     const[address , setAddress ]=useState('');
 
 
-    useEffect(()=>{
-
-        fetchWallet();
-    })
-    const fetchWallet=async()=>{
-        console.log("inside fetchWallet");
-        setUid(auth.currentUser.uid);
-        const response=await getDoc(doc(db,"users",uid));
-        const data=response.data();
-
-        console.log("Fetched Wallet Address: "+data.walletaddress);
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+            if (user) {
+                fetchWallet();
+            }
+        });
         
-        setAddress(data.walletaddress);
-        console.log("address in address variable"+address);
-        fetchBalance(data.walletaddress);
-    }
-    const fetchBalance=async(addresss)=>{
-        console.log("inside fetchBalance, received address: "+ addresss);
-        const takapoisa=await provider.getBalance(addresss);
-        setBalance(ethers.formatEther(takapoisa));
-        console.log("balance: ",ethers.formatEther(takapoisa));    
-    }
+        return () => unsubscribe();
+    }, []);
+    const fetchWallet = async () => {
+        try {
+            console.log("inside fetchWallet");
+            const user = auth.currentUser;
+            
+            if (!user) {
+                console.log("No authenticated user");
+                return;
+            }
+            
+            const currentUid = user.uid;
+            setUid(currentUid);
+            
+            const docRef = doc(db, "users", currentUid);
+            const docSnap = await getDoc(docRef);
+            
+            if (!docSnap.exists()) {
+                console.log("No document found for user");
+                return;
+            }
+            
+            const data = docSnap.data();
+            
+            if (!data?.walletaddress) {
+                console.log("No wallet address found in document");
+                return;
+            }
+            
+            console.log("Fetched Wallet Address:", data.walletaddress);
+            setAddress(data.walletaddress);
+            await fetchBalance(data.walletaddress);
+            
+        } catch (error) {
+            console.error("Wallet fetch error:", error);
+            Alert.alert("Error", "Failed to load wallet information");
+        }
+    };
+    const fetchBalance = async (addresss) => {
+        try {
+            console.log("inside fetchBalance, received address: "+ addresss);
+            const takapoisa = await provider.getBalance(addresss);
+            const ethBalance = ethers.formatEther(takapoisa);
+            
+            // Update local state
+            setBalance(ethBalance);
+            
+            // Update Firestore
+            if(uid) {
+                await updateDoc(doc(db, "users", uid), {
+                    balance: ethBalance
+                });
+                console.log("Balance updated in Firestore");
+            }
+        } catch (error) {
+            console.error("Balance update error:", error);
+            Alert.alert("Error", "Failed to save balance to database");
+        }
+    };
 
     const checkBalance = async () => {
-        if (!wallet) return;
+        if (!address) return;
         try {
             const balance = await provider.getBalance(address);
-            setBalance(ethers.formatEther(balance));
+            const ethBalance = ethers.formatEther(balance);
+            
+            // Update both state and Firestore
+            setBalance(ethBalance);
+            if(uid) {
+                await updateDoc(doc(db, "users", uid), {
+                    balance: ethBalance
+                });
+            }
         } catch (error) {
             console.error("Balance check error:", error);
             Alert.alert("Error", "Failed to fetch balance");
@@ -86,7 +142,7 @@ const Wallet = () => {
             const amount = ethers.parseEther("0.01");
             
             const tx = await senderWallet.sendTransaction({
-                to: "0x95F0B914E36614Aa0B0E6d0B0d86B39b69142638",
+                to: "0x3e2058885342e874774c2FA6cB18A0398931Ed1f",
                 value: amount,
             });
             
@@ -108,7 +164,7 @@ const Wallet = () => {
         }
         
         try {
-            const senderPrivateKey = "0xeeaa9f5abdafa95223a59d748a5337d2129540e157d40373db16ee17c972585a";
+            const senderPrivateKey = "0x689a190151f56743e65d8f4e0a177239a4cd449a9b3d1574826ef95d3bc37d9b";
             const senderWallet = new ethers.Wallet(senderPrivateKey, provider);
             const amount = ethers.parseEther("0.01");
             
