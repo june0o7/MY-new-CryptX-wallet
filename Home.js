@@ -28,11 +28,27 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 
 // import Pay from "./pay";
+import PayToContact from "./PayToContact";
 import { 
   ActivityIndicator 
 } from "react-native";
 
 import { auth, db } from "./firebaseConfig";
+
+
+
+async function convertETHtoINR(ethAmount) {
+  try {
+      const response = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=inr");
+      const data = await response.json();
+      const ethToInrRate = data.ethereum.inr;
+
+      const convertedAmount = ethAmount * ethToInrRate;
+      console.log(`💰 ${ethAmount} ETH = ₹ $ { convertedAmount.toFixed(2)} INR`);
+  } catch (error) {
+      console.error("Error fetching exchange rate:", error);
+  }
+}
 
 
 function Home({ navigation }) {
@@ -102,8 +118,8 @@ const handleRefresh = () => {
           <View style={styles.balanceContainer}>
             <Text style={styles.greetingText}>Hello, {data && data.name}!</Text>
             <Text style={styles.balanceLabel}>Total Balance</Text>
-            <Text style={styles.balanceAmount}>{data && data.balance} ETH 
-              
+            <Text style={styles.balanceAmount}>
+                        {data && data.balance ? parseFloat(data.balance).toFixed(2) : "0.00"} ETH
             </Text>
             <TouchableOpacity 
     onPress={handleRefresh}
@@ -112,7 +128,7 @@ const handleRefresh = () => {
     <Text style={styles.refreshButtonText}>↻</Text>
 </TouchableOpacity>
             <View style={styles.marketGrowthContainer}>
-              <Text style={styles.marketGrowthText}>Market Growth: 4.7%</Text>
+              <Text style={styles.marketGrowthText}> ETH ≈ ₹{(data.balance * 300000).toFixed(2)} </Text>
             </View>
 
             <View style={styles.buttonRow}>
@@ -130,7 +146,7 @@ const handleRefresh = () => {
                 />
                 <Text style={styles.iconText}>Add</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.iconButton}>
+              <TouchableOpacity style={styles.iconButton}onPress={() => navigation.navigate('Pay To Contact')}>
                 <Image
                   source={require("./assets/icons/mg.png")}
                   style={styles.iconImage}
@@ -143,14 +159,15 @@ const handleRefresh = () => {
           {/* New: Quick Actions Section */}
           <Text style={styles.sectionHeader}>Quick Actions</Text>
           <View style={styles.quickActionsContainer}>
+            
             <TouchableOpacity style={styles.quickActionButton}>
-              <Text style={styles.quickActionText}>Buy Crypto</Text>
+              <Text style={styles.quickActionText}>Wallet</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.quickActionButton}>
-              <Text style={styles.quickActionText}>Sell Crypto</Text>
+              <Text style={styles.quickActionText}>Pay</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.quickActionButton}>
-              <Text style={styles.quickActionText}>Exchange</Text>
+              <Text style={styles.quickActionText}>Scan QR</Text>
             </TouchableOpacity>
           </View>
 
@@ -505,17 +522,17 @@ const styles = StyleSheet.create({
   },
   refreshButton: {
     position: 'absolute',
-    right: 20,
-    top: 20,
+    right: 10,
+    top: 5,
     padding: 10,
-    borderRadius: 30,
+    borderRadius: 180,
     backgroundColor: '#1A1A2E',
     borderWidth: 2,
-    borderColor: '#00FFEA',
+    borderColor: '#1A1A2E',
 },
 refreshButtonText: {
     color: '#00FFEA',
-    fontSize: 20,
+    fontSize: 30,
     fontWeight: 'bold',
 },
   personName: {

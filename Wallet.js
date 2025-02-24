@@ -11,8 +11,9 @@ const auth = getAuth(app);
 
 const Wallet = () => {
     
-    const ganacheUrl = "http://192.168.29.107:7545";
-    // const ganacheUrl = "HTTP://192.168.29.107:7545";
+    const ganacheUrl = "http://192.168.29.107:7545";//home 
+    
+    // const ganacheUrl = "http://192.168.0.172:7545";
     // const ganacheUrl = "http://192.168.0.172:7545";
     const provider = new ethers.JsonRpcProvider(ganacheUrl, {
         name: 'ganache',
@@ -23,6 +24,7 @@ const Wallet = () => {
     const [balance, setBalance] = useState('0.0');
     const [uid, setUid] = useState(null);
     const[address , setAddress ]=useState('');
+    const [privateKey, setPrivateKey]=useState('');
 
 
     useEffect(() => {
@@ -63,7 +65,9 @@ const Wallet = () => {
             }
             
             console.log("Fetched Wallet Address:", data.walletaddress);
+            // console.log("Fetched Wallet Address:", w.privateKey);
             setAddress(data.walletaddress);
+            setPrivateKey(data.privateKey);
             await fetchBalance(data.walletaddress);
             
         } catch (error) {
@@ -118,6 +122,7 @@ const Wallet = () => {
             setWallet(w);
             setAddress(w.address);
             console.log("Wallet address:", w.address);
+            console.log("Wallet address:", w.privateKey);
             Alert.alert("Wallet Created", `Address: ${w.address}`);
             if (uid) await upload(w.address, w.privateKey);
         } catch (error) {
@@ -137,7 +142,10 @@ const Wallet = () => {
     };
     const sendtobro = async()=>{
         try {
-            const senderPrivateKey = wallet.privateKey;
+            //what is the sender private key....
+            const senderPrivateKey = privateKey;
+            console.log("send to bro ", address);
+            // const senderPrivateKey = w.privateKey;
             const senderWallet = new ethers.Wallet(senderPrivateKey, provider);
             const amount = ethers.parseEther("0.01");
             
@@ -158,7 +166,7 @@ const Wallet = () => {
 
     };
     const receiveFromBro = async () => {
-        if (!wallet) {
+        if (!Wallet) {
             Alert.alert("Error", "Create wallet first");
             return;
         }
@@ -186,7 +194,10 @@ const Wallet = () => {
     return (
         <LinearGradient colors={['#0A0A0A', '#1A1A2E', '#16213E']} style={styles.container}>
             <View style={styles.content}>
-                <Text style={styles.balanceText}>Balance: {balance} ETH</Text>
+            <Text style={styles.balanceText}>
+  Balance: {balance ? parseFloat(balance).toFixed(2) : "0.00"} ETH
+</Text>
+
                 
                 <View style={styles.buttonContainer}>
                     <TouchableOpacity style={styles.button} onPress={receiveFromBro}>
@@ -197,7 +208,7 @@ const Wallet = () => {
                         <Text style={styles.buttonText}>Create Wallet</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={[styles.button, styles.createButton]} onPress={sendtobro}>
-                        <Text style={styles.buttonText}>Send ETH</Text>
+                        <Text style={styles.buttonText}>Send Test ETH</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={[styles.button, styles.createButton]} onPress={fetchWallet}>
                         <Text style={styles.buttonText}>check Balance</Text>

@@ -27,6 +27,7 @@ export default function App() {
         <stack.Screen name='SignUp'  component={SignUp} options={{headerShown:false}}/>
         <stack.Screen name='Home' component={Home} options={{headerShown:false}}/>
         <stack.Screen name='Main' component={Main} options={{headerShown:false}}/>
+        {/* <stack.Screen name='ID' component={Profile} options={{headerShown:false}}/> */}
         {/* <stack.Screen name='tudung' component={tudung} options={{headerShown:false}}/> */}
        
       </stack.Navigator>

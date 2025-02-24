@@ -2,8 +2,11 @@ import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Login from './Login';
 import { Component } from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+// import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import ID from './ID';
 
-function Set(props) {
+function Set({ navigation }) {
     const handlePress = (section) => {
         // Add your navigation/handling logic here
         console.log(`Pressed: ${section}`);
@@ -16,7 +19,7 @@ function Set(props) {
             style={styles.container}
         >
             <View style={styles.content}>
-                <TouchableOpacity style={styles.button} onPress={() => handlePress('Personal Info')}>
+                <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('lD')}>
                     <Text style={styles.buttonText}>Personal Info</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.button} onPress={() => handlePress('Notifications')}>
@@ -31,7 +34,7 @@ function Set(props) {
                 <TouchableOpacity style={styles.button} onPress={() => handlePress('Lock App')}>
                     <Text style={styles.buttonText}>Lock App</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={[styles.button, styles.signOutButton]} onPress={() => handlePress('Login')}>
+                <TouchableOpacity style={[styles.button, styles.signOutButton]} onPress={() => navigation.navigate('Login')}>
                     <Text style={styles.buttonText}>Sign Out</Text>
                 </TouchableOpacity>
             </View>

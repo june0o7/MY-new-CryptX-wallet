@@ -13,6 +13,7 @@ import { getFirestore, doc, getDoc } from "firebase/firestore";
 import { LinearGradient } from "expo-linear-gradient";
 import app from "./firebaseConfig";
 
+
 function ID(props) {
   const auth = getAuth(app);
   const db = getFirestore(app);
