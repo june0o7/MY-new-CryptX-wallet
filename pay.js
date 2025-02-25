@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   StyleSheet,
   Text,
@@ -8,154 +8,188 @@ import {
   ScrollView,
   Modal,
   Alert,
+  ActivityIndicator,
+  Animated,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-// import { useEffect, useState } from 'react';
-// import { StyleSheet, Text, View, TouchableOpacity, Alert } from 'react-native';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { getAuth } from 'firebase/auth';
 import { ethers } from 'ethers';
-import { doc, updateDoc, getFirestore, getDoc } from 'firebase/firestore';
+import { doc, getFirestore, getDoc, collection, getDocs } from 'firebase/firestore';
 import app from './firebaseConfig';
-// import { LinearGradient } from 'expo-linear-gradient';
+import ConfettiCannon from 'react-native-confetti-cannon'; // For confetti animation
 
 const db = getFirestore(app);
 const auth = getAuth(app);
 
 function Pay(props) {
+  const ganacheUrl = "http://192.168.29.107:7545"; // home
+  const provider = new ethers.JsonRpcProvider(ganacheUrl, {
+    name: 'ganache',
+    chainId: 1337,
+  });
 
-const ganacheUrl = "http://192.168.29.107:7545";//home
-    // const ganacheUrl = "HTTP://192.168.29.107:7545";
-    // const ganacheUrl = "http://192.168.0.172:7545";
-    // const ganacheUrl = "http://192.168.0.172:7545";
-    
-    const provider = new ethers.JsonRpcProvider(ganacheUrl, {
-        name: 'ganache',
-        chainId: 1337,
-    });
-
-  const [recipientAddress, setRecipientAddress] = useState('');
+  const [payTo, setPayTo] = useState('');
   const [amount, setAmount] = useState('');
   const [transactionStatus, setTransactionStatus] = useState('');
   const [isModalVisible, setIsModalVisible] = useState(false);
-  // const [balance, setBalance] = useState(10.5); // Example balance in BTC
   const [transactions, setTransactions] = useState([
     { id: 1, type: 'Sent', amount: 0.5, to: 'Rajdeep Pal', date: '2023-10-01' },
     { id: 2, type: 'Received', amount: 1.2, from: 'Rumpa Paul', date: '2023-10-02' },
   ]);
+  const [balance, setBalance] = useState('0.0');
+  const [isLoading, setIsLoading] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const fadeAnim = useState(new Animated.Value(0))[0]; // For fade-in animation
 
-
-  //............
-
-  const [wallet, setWallet] = useState(null);
-    const [balance, setBalance] = useState('0.0');
-    const [uid, setUid] = useState(null);
-    const[address , setAddress ]=useState('');
-    const [refreshTrigger, setRefreshTrigger] = useState(0);
-
-  // Add loading state
-const [refreshing, setRefreshing] = useState(false);
-{refreshing && <ActivityIndicator color="#00FFEA" style={styles.loadingIndicator} />}
-
-const fetchData = async () => {
-  try {
-      const user = auth.currentUser;
-      if (!user) return;
-      
-      const docRef = doc(db, "users", user.uid);
-      const docSnap = await getDoc(docRef);
-      
-      if (docSnap.exists()) {
-          setData(docSnap.data());
+  // Fetch balance from Firestore
+  const fetchBalance = async () => {
+    setIsLoading(true);
+    try {
+      const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        setBalance(userData.balance || '0.0');
       }
-  } catch (error) {
-      console.error("Fetch error:", error);
-      Alert.alert("Error", "Failed to refresh data");
-  }
-};
-// useEffect(() => {
-//   fetchData();
-// }, [refreshTrigger]); 
+    } catch (error) {
+      console.error("Error fetching balance:", error);
+      Alert.alert("Error", "Failed to fetch balance.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-// const handleRefresh = () => {
-//   setRefreshTrigger(prev => prev + 1);
-// };
-// Add refresh handler function
-// Add refreshTrigger as dependency
+  // Fetch balance on component mount
+  useEffect(() => {
+    fetchBalance();
+  }, []);
 
-
-
-    //fetching the balance from firestore database 
-    
-
-    
-
-  // Function to handle the payment process
-
-
+  // Send ETH function
   const sendEth = async (senderPrivateKey, recipientAddress, ethamount) => {
     if (!senderPrivateKey || !recipientAddress || !ethamount) {
-      Alert.alert("Error Yo !");
+      Alert.alert("Error", "Missing sender private key, recipient address, or amount.");
       return;
     }
 
     const senderWallet = new ethers.Wallet(senderPrivateKey, provider);
-
     const amount = ethers.parseEther(ethamount);
 
     try {
-      console.log("sending");
+      console.log("Sending transaction...");
       const tx = await senderWallet.sendTransaction({
         to: recipientAddress,
         value: amount,
       });
 
-      console.log(tx.hash);
-      console.log("Transaction sent successfully");
+      console.log("Transaction hash:", tx.hash);
       await tx.wait();
+      console.log("Transaction completed");
 
-      console.log("transaction completed");
-      Alert.alert("Success", "Transaction sent successfully.");
+      // Trigger UI updates after successful transaction
+      handlePayment();
+      setShowConfetti(true); // Show confetti animation
+      setTimeout(() => setShowConfetti(false), 5000); // Hide confetti after 5 seconds
+      // Alert.alert("Success", "Transaction sent successfully.");
     } catch (error) {
-      console.log(error);
+      console.error("Transaction failed:", error);
       Alert.alert("Error", "Failed to send transaction.");
     }
   };
-  const handlePayment = () => {
-    if (!recipientAddress || !amount) {
-      Alert.alert('Error', 'Please enter recipient address and amount.');
+
+  // Send function to handle payment logic
+  const send = async () => {
+    if (!payTo || !amount) {
+      Alert.alert("Error", "Please enter recipient address/phone and amount.");
       return;
     }
 
-    // Simulate a payment process (replace with actual blockchain transaction logic)
+    const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
+    if (!userDoc.exists()) {
+      Alert.alert("Error", "User data not found.");
+      return;
+    }
+
+    const data = userDoc.data();
+    const pkey = data.privateKey;
+    let walletFound = false;
+
+    console.log("Sender's private key:", pkey);
+    console.log(`TO: ${payTo} Amount: ${amount}`);
+
+    if (/^\d+$/.test(payTo)) {
+      console.log("payto contains phone number");
+      const usersCollection = collection(db, "users");
+      const usersSnapshot = await getDocs(usersCollection);
+
+      for (const userDoc of usersSnapshot.docs) {
+        const userData = userDoc.data();
+        if (userData.phone === payTo) {
+          if (!userData.walletaddress) {
+            Alert.alert("Error", "Recipient wallet address not found.");
+            return;
+          }
+          console.log("Recipient wallet found:", userData.walletaddress);
+          walletFound = true;
+          await sendEth(pkey, userData.walletaddress, amount);
+          break;
+        }
+      }
+
+      if (!walletFound) {
+        Alert.alert("Error", "No user with that phone number found.");
+      }
+    } else {
+      console.log("payto is wallet address");
+      await sendEth(pkey, payTo, amount);
+    }
+  };
+
+  // Handle payment UI updates
+  const handlePayment = () => {
+    if (!payTo || !amount) {
+      Alert.alert('Error', 'Please enter recipient address/phone and amount.');
+      return;
+    }
+
     setIsModalVisible(false); // Close the modal
-    setTransactionStatus(`Sending ${amount} BTC to ${recipientAddress}...`);
-    
+    setTransactionStatus(`Sending ${amount} ETH to ${payTo}...`);
+
     setTimeout(() => {
       setTransactionStatus('Transaction successful!');
-      setRecipientAddress('');
+      setPayTo('');
       setAmount('');
-      // Add the transaction to the history
       setTransactions([
         {
           id: transactions.length + 1,
           type: 'Sent',
           amount: parseFloat(amount),
-          to: recipientAddress,
+          to: payTo,
           date: new Date().toISOString().split('T')[0],
         },
         ...transactions,
       ]);
+
+      // Refresh balance after transaction
+      fetchBalance();
     }, 3000); // Simulate a 3-second delay for the transaction
   };
 
-  // Function to open the confirmation modal
+  // Confirm transaction
   const confirmTransaction = () => {
-    if (!recipientAddress || !amount) {
-      Alert.alert('Error', 'Please enter recipient address and amount.');
+    if (!payTo || !amount) {
+      Alert.alert("Error", "Please enter recipient address/phone and amount.");
       return;
     }
     setIsModalVisible(true);
   };
+
+  // Fade-in animation for new transactions
+  useEffect(() => {
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 1000,
+      useNativeDriver: true,
+    }).start();
+  }, [transactions]);
 
   return (
     <LinearGradient
@@ -164,19 +198,27 @@ const fetchData = async () => {
     >
       <View style={styles.content}>
         {/* Balance Display */}
-        
+        <View style={styles.balanceContainer}>
+        <Text style={styles.balanceText}>
+  Current Balance: {parseFloat(balance).toFixed(2)} ETH
+</Text>
+          <TouchableOpacity style={styles.refreshButton} onPress={fetchBalance}>
+            {isLoading ? (
+              <ActivityIndicator color="#00FFEA" />
+            ) : (
+              <Text style={styles.refreshButtonText}>↻</Text>
+            )}
+          </TouchableOpacity>
+        </View>
+
+        {/* Recipient Address Input */}
         <TextInput
           style={styles.input}
-          placeholder="Enter Recipient Address"
+          placeholder="Enter Recipient Address/Phone"
           placeholderTextColor="#6C6C6C"
-          value={recipientAddress}
-          onChangeText={setRecipientAddress}
+          value={payTo}
+          onChangeText={setPayTo}
         />
-
-        {/* QR Code Scanner Button */}
-        <TouchableOpacity style={styles.qrButton} onPress={() => Alert.alert('QR Scanner', 'Scan QR Code')}>
-          <Text style={styles.qrButtonText}>Scan QR Code</Text>
-        </TouchableOpacity>
 
         {/* Amount Input */}
         <TextInput
@@ -189,12 +231,11 @@ const fetchData = async () => {
         />
 
         {/* Send Button */}
-        <TouchableOpacity style={styles.sendButton} onPress={()=>{sendEth("0x478bc8c758a029abc0f29bd2cf6273e70e3c0a1750491999371363d7169db996","0xA27f605CbDF23c9C6233758fFD92B40D676c6654", "1"
-)}}>
+        <TouchableOpacity style={styles.sendButton} onPress={confirmTransaction}>
           <Text style={styles.sendButtonText}>Send</Text>
         </TouchableOpacity>
 
-        {/* Transaction Status Display */}
+        {/* Transaction Status */}
         {transactionStatus ? (
           <Text style={[styles.statusText, { color: transactionStatus.includes('successful') ? '#00FFEA' : '#FF5733' }]}>
             {transactionStatus}
@@ -205,12 +246,20 @@ const fetchData = async () => {
         <Text style={styles.historyHeader}>Recent Transactions</Text>
         <ScrollView style={styles.historyContainer}>
           {transactions.map((tx) => (
-            <View key={tx.id} style={styles.transactionItem}>
-              <Text style={styles.transactionText}>
-                {tx.type === 'Sent' ? `Sent ${tx.amount} BTC to ${tx.to}` : `Received ${tx.amount} BTC from ${tx.from}`}
-              </Text>
-              <Text style={styles.transactionDate}>{tx.date}</Text>
-            </View>
+            <Animated.View
+              key={tx.id}
+              style={[styles.transactionItem, { opacity: fadeAnim }]}
+            >
+              <LinearGradient
+                colors={['#1A1A2E', '#16213E']}
+                style={styles.transactionGradient}
+              >
+                <Text style={styles.transactionText}>
+                  {tx.type === 'Sent' ? `Sent ${tx.amount} ETH to ${tx.to}` : `Received ${tx.amount} ETH from ${tx.from}`}
+                </Text>
+                <Text style={styles.transactionDate}>{tx.date}</Text>
+              </LinearGradient>
+            </Animated.View>
           ))}
         </ScrollView>
       </View>
@@ -220,18 +269,28 @@ const fetchData = async () => {
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <Text style={styles.modalText}>Confirm Transaction</Text>
-            <Text style={styles.modalText}>Send {amount} BTC to {recipientAddress}?</Text>
+            <Text style={styles.modalText}>Send {amount} ETH to {payTo}?</Text>
             <View style={styles.modalButtons}>
               <TouchableOpacity style={styles.modalButton} onPress={() => setIsModalVisible(false)}>
                 <Text style={styles.modalButtonText}>Cancel</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.modalButton} onPress={handlePayment}>
+              <TouchableOpacity style={styles.modalButton} onPress={send}>
                 <Text style={styles.modalButtonText}>Confirm</Text>
               </TouchableOpacity>
             </View>
           </View>
         </View>
       </Modal>
+
+      {/* Confetti Animation */}
+      {showConfetti && (
+        <ConfettiCannon
+          count={200}
+          origin={{ x: -10, y: 0 }}
+          fallSpeed={3000}
+          fadeOut={true}
+        />
+      )}
     </LinearGradient>
   );
 }
@@ -244,12 +303,25 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
   },
+  balanceContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
   balanceText: {
     fontSize: 24,
     fontWeight: 'bold',
     color: '#00FFEA',
-    marginBottom: 20,
-    textAlign: 'center',
+  },
+  refreshButton: {
+    padding: 10,
+    borderRadius: 20,
+    backgroundColor: '#1A1A2E',
+  },
+  refreshButtonText: {
+    fontSize: 24,
+    color: '#00FFEA',
   },
   input: {
     width: '100%',
@@ -261,38 +333,6 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     color: '#FFFFFF',
     backgroundColor: '#1A1A2E',
-  },
-  loadingIndicator: {
-    position: 'absolute',
-    right: 20,
-    top: 20,
-},
-refreshButton: {
-  position: 'absolute',
-  right: 10,
-  top: 5,
-  padding: 10,
-  borderRadius: 180,
-  backgroundColor: '#1A1A2E',
-  borderWidth: 2,
-  borderColor: '#1A1A2E',
-},
-refreshButtonText: {
-  color: '#00FFEA',
-  fontSize: 30,
-  fontWeight: 'bold',
-},
-  qrButton: {
-    backgroundColor: '#00FFEA',
-    padding: 15,
-    borderRadius: 10,
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  qrButtonText: {
-    color: '#0A0A0A',
-    fontSize: 16,
-    fontWeight: 'bold',
   },
   sendButton: {
     backgroundColor: '#00FFEA',
@@ -321,10 +361,11 @@ refreshButtonText: {
     flex: 1,
   },
   transactionItem: {
-    backgroundColor: '#1A1A2E',
+    marginBottom: 10,
+  },
+  transactionGradient: {
     padding: 15,
     borderRadius: 10,
-    marginBottom: 10,
   },
   transactionText: {
     color: '#FFFFFF',
