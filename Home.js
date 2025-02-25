@@ -160,10 +160,10 @@ const handleRefresh = () => {
           <Text style={styles.sectionHeader}>Quick Actions</Text>
           <View style={styles.quickActionsContainer}>
             
-            <TouchableOpacity style={styles.quickActionButton}>
+            <TouchableOpacity style={styles.quickActionButton}onPress={() => navigation.navigate('Wallet')}>
               <Text style={styles.quickActionText}>Wallet</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.quickActionButton}>
+            <TouchableOpacity style={styles.quickActionButton}onPress={() => navigation.navigate('Pay')}>
               <Text style={styles.quickActionText}>Pay</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.quickActionButton}>

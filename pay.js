@@ -23,9 +23,11 @@ const auth = getAuth(app);
 
 function Pay(props) {
 
-const ganacheUrl = "http://192.168.29.107:7545";
+const ganacheUrl = "http://192.168.29.107:7545";//home
     // const ganacheUrl = "HTTP://192.168.29.107:7545";
     // const ganacheUrl = "http://192.168.0.172:7545";
+    // const ganacheUrl = "http://192.168.0.172:7545";
+    
     const provider = new ethers.JsonRpcProvider(ganacheUrl, {
         name: 'ganache',
         chainId: 1337,
@@ -90,37 +92,34 @@ const fetchData = async () => {
   // Function to handle the payment process
 
 
-  const send = async(recipientAddressLocal, paybleamount)=>{
-    try {
-        //what is the sender private key....
-
-
-        const info= await getDoc(doc(getFirestore(app), "users", getAuth(app).currentUser.uid));
-        const data=info.data();
-
-        console.log("fethed pkey in send(): ", data.privateKey);
-        const senderPrivateKey = data.privateKey;
-        console.log("send to bro ", recipientAddressLocal);
-        // const senderPrivateKey = w.privateKey;
-        const senderWallet = new ethers.Wallet(senderPrivateKey, provider);
-        const amount = ethers.parseEther(paybleamount);
-        
-        const tx = await senderWallet.sendTransaction({
-            to: recipientAddressLocal,
-            value: amount,
-        });
-        
-        const receipt = await tx.wait();
-        console.log("Transaction confirmed:", receipt.hash);
-        Alert.alert("Success", "Transaction completed");
-        checkBalance();
-    } catch (error) {
-        console.error("Transaction error:", error);
-        Alert.alert("Error", "Transaction failed");
+  const sendEth = async (senderPrivateKey, recipientAddress, ethamount) => {
+    if (!senderPrivateKey || !recipientAddress || !ethamount) {
+      Alert.alert("Error Yo !");
+      return;
     }
-    
 
-};
+    const senderWallet = new ethers.Wallet(senderPrivateKey, provider);
+
+    const amount = ethers.parseEther(ethamount);
+
+    try {
+      console.log("sending");
+      const tx = await senderWallet.sendTransaction({
+        to: recipientAddress,
+        value: amount,
+      });
+
+      console.log(tx.hash);
+      console.log("Transaction sent successfully");
+      await tx.wait();
+
+      console.log("transaction completed");
+      Alert.alert("Success", "Transaction sent successfully.");
+    } catch (error) {
+      console.log(error);
+      Alert.alert("Error", "Failed to send transaction.");
+    }
+  };
   const handlePayment = () => {
     if (!recipientAddress || !amount) {
       Alert.alert('Error', 'Please enter recipient address and amount.');
@@ -130,7 +129,7 @@ const fetchData = async () => {
     // Simulate a payment process (replace with actual blockchain transaction logic)
     setIsModalVisible(false); // Close the modal
     setTransactionStatus(`Sending ${amount} BTC to ${recipientAddress}...`);
-    send("0x2c7167E99d83646e0d3cddc9aA74aD876834208A", "0.1");
+    
     setTimeout(() => {
       setTransactionStatus('Transaction successful!');
       setRecipientAddress('');
@@ -190,7 +189,8 @@ const fetchData = async () => {
         />
 
         {/* Send Button */}
-        <TouchableOpacity style={styles.sendButton} onPress={confirmTransaction}>
+        <TouchableOpacity style={styles.sendButton} onPress={()=>{sendEth("0x478bc8c758a029abc0f29bd2cf6273e70e3c0a1750491999371363d7169db996","0xA27f605CbDF23c9C6233758fFD92B40D676c6654", "1"
+)}}>
           <Text style={styles.sendButtonText}>Send</Text>
         </TouchableOpacity>
 
