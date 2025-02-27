@@ -1,4 +1,4 @@
-
+import 'react-native-get-random-values';
 import { useState } from 'react';
 import { StyleSheet, Text, View, StatusBar, TextInput, Button, TouchableOpacity } from 'react-native';
 import Login from './Login';
@@ -6,7 +6,7 @@ import { createNavigatorFactory, NavigationContainer} from '@react-navigation/na
 import { createStackNavigator } from '@react-navigation/stack';
 import SignUp from './SignUp';
 import Home from './Home';
-import 'react-native-get-random-values';
+
 // import MyComponent from './MyComponent';
 import Main from './main';
 // import Tudung from './tudung';

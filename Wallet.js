@@ -1,3 +1,4 @@
+import 'react-native-get-random-values';
 import { useEffect, useState } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, Alert } from 'react-native';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
@@ -5,6 +6,7 @@ import { ethers } from 'ethers';
 import { doc, updateDoc, getFirestore, getDoc } from 'firebase/firestore';
 import app from './firebaseConfig';
 import { LinearGradient } from 'expo-linear-gradient';
+
 
 const db = getFirestore(app);
 const auth = getAuth(app);
