@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, TouchableHighlight } from 'react-native';
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, TouchableHighlight,ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc, getFirestore } from 'firebase/firestore';
@@ -16,7 +16,7 @@ function SignUp(props) {
     const [password, setPassword] = useState('');
     const [username, setUsername] = useState('');
     const [phNo, setphNo] = useState('');
-
+    const [loading, setLoading]= useState(false);//loading 
     const db = getFirestore(app);
     const navigator = useNavigation();
 
@@ -87,11 +87,12 @@ function SignUp(props) {
                     onPressOut={() => setPressed2(false)}
                     onPress={async () => {
                         if (pattern.test(email)) {
-                            try {
+                            try {setLoading(true);
                                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
                                 const uid = userCredential.user.uid;
 
                                 const userDoc = {
+                                    uid: uid,
                                     name: username,
                                     email: email,
                                     password: password,
@@ -104,8 +105,10 @@ function SignUp(props) {
                                 await setDoc(document, userDoc);
                                 console.log("User created");
                                 navigator.navigate('Login');
+                                setLoading(false);
                             } catch (error) {
                                 console.log(error);
+                                setLoading(false);
                             }
                         } else {
                             alert("Invalid Email");
@@ -121,6 +124,9 @@ function SignUp(props) {
                 </TouchableOpacity>
 
                 <Text style={styles.versionText}>@version 2.0.6</Text>
+                {
+                     loading && (<ActivityIndicator size="large" color="#00FFEA" />)
+                                }
             </View>
         </LinearGradient>
     );

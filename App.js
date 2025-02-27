@@ -10,6 +10,8 @@ import 'react-native-get-random-values';
 // import MyComponent from './MyComponent';
 import Main from './main';
 // import Tudung from './tudung';
+import PayToContact from './PayToContact';
+import sendCrypto from './sendCrypto';
 
 
 
@@ -29,7 +31,8 @@ export default function App() {
         <stack.Screen name='Main' component={Main} options={{headerShown:false}}/>
         {/* <stack.Screen name='ID' component={Profile} options={{headerShown:false}}/> */}
         {/* <stack.Screen name='tudung' component={tudung} options={{headerShown:false}}/> */}
-       
+        <stack.Screen name="PayToContact" component={PayToContact} options={{headerShown:true}} />
+      <stack.Screen name="sendCrypto" component={sendCrypto} options={{headerShown:true}}/>
       </stack.Navigator>
     </NavigationContainer>
   );

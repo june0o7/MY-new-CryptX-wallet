@@ -10,6 +10,8 @@ import {
   TouchableOpacity,
   TouchableHighlight,
   ScrollView,
+  Alert,
+  ActivityIndicator,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import firebase from "firebase/compat/app";
@@ -24,87 +26,88 @@ import {
   getDoc,
   doc,
   getDocs,
+  updateDoc,
 } from "firebase/firestore";
 import { LinearGradient } from "expo-linear-gradient";
+import { ethers } from "ethers";
 
-// import Pay from "./pay";
-import PayToContact from "./PayToContact";
-import { 
-  ActivityIndicator 
-} from "react-native";
-
-import { auth, db } from "./firebaseConfig";
-
-
-
-async function convertETHtoINR(ethAmount) {
-  try {
-      const response = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=inr");
-      const data = await response.json();
-      const ethToInrRate = data.ethereum.inr;
-
-      const convertedAmount = ethAmount * ethToInrRate;
-      console.log(`💰 ${ethAmount} ETH = ₹ $ { convertedAmount.toFixed(2)} INR`);
-  } catch (error) {
-      console.error("Error fetching exchange rate:", error);
-  }
-}
-
+const auth = getAuth(app);
+const db = getFirestore(app);
 
 function Home({ navigation }) {
-
-
-  //......................
-
-  const auth = getAuth(app);
-  const db = getFirestore(app);
   const [data, setData] = useState({});
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [address, setAddress] = useState("");
+  const [balance, setBalance] = useState("0.0");
+  const [refreshing, setRefreshing] = useState(false);
 
-  // Add loading state
-const [refreshing, setRefreshing] = useState(false);
-
-// Update handleRefresh
-
-
-// Add activity indicator
-{refreshing && <ActivityIndicator color="#00FFEA" style={styles.loadingIndicator} />}
+  const provider = new ethers.JsonRpcProvider("http://192.168.29.107:7545", {
+    name: "ganache",
+    chainId: 1337,
+  });
 
   const fetchData = async () => {
     try {
-        const user = auth.currentUser;
-        if (!user) return;
-        
-        const docRef = doc(db, "users", user.uid);
-        const docSnap = await getDoc(docRef);
-        
-        if (docSnap.exists()) {
-            setData(docSnap.data());
-        }
+      const user = auth.currentUser;
+      if (!user) return;
+
+      const docRef = doc(db, "users", user.uid);
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists()) {
+        setData(docSnap.data());
+        setAddress(docSnap.data().walletaddress); // Set the wallet address
+      }
     } catch (error) {
-        console.error("Fetch error:", error);
-        Alert.alert("Error", "Failed to refresh data");
+      console.error("Fetch error:", error);
+      Alert.alert("Error", "Failed to refresh data");
     }
-};
-  
+  };
 
-useEffect(() => {
-  fetchData();
-}, [refreshTrigger]); // Add refreshTrigger as dependency
+  useEffect(() => {
+    fetchData();
+  }, [refreshTrigger]);
 
-// Add refresh handler function
-const handleRefresh = () => {
-  setRefreshTrigger(prev => prev + 1);
-};
+  const checkBalance = async () => {
+    if (!address) {
+      Alert.alert("Error", "Wallet address not found.");
+      return;
+    }
 
+    setRefreshing(true); // Start loading indicator
 
-  //.....................
+    try {
+      // Fetch the balance from the Ethereum wallet
+      const balance = await provider.getBalance(address);
+      const ethBalance = ethers.formatEther(balance); // Convert balance to ETH
 
+      // Update the Firestore database with the new balance
+      const user = auth.currentUser;
+      if (user) {
+        const userDocRef = doc(db, "users", user.uid);
+        await updateDoc(userDocRef, {
+          balance: ethBalance,
+        });
 
+        // Update the local state to reflect the new balance
+        setBalance(ethBalance);
+        Alert.alert("Success", "Balance updated successfully!");
+      } else {
+        Alert.alert("Error", "User not authenticated.");
+      }
+    } catch (error) {
+      console.error("Balance check error:", error);
+      Alert.alert("Error", "Failed to fetch or update balance.");
+    } finally {
+      setRefreshing(false); // Stop loading indicator
+    }
+  };
 
+  const handleRefresh = () => {
+    setRefreshTrigger((prev) => prev + 1);
+    checkBalance();
+  };
 
-
-  //.......................
   return (
     <LinearGradient
       colors={["#0A0A0A", "#1A1A2E", "#16213E"]}
@@ -119,16 +122,19 @@ const handleRefresh = () => {
             <Text style={styles.greetingText}>Hello, {data && data.name}!</Text>
             <Text style={styles.balanceLabel}>Total Balance</Text>
             <Text style={styles.balanceAmount}>
-                        {data && data.balance ? parseFloat(data.balance).toFixed(2) : "0.00"} ETH
+              {data && data.balance ? parseFloat(data.balance).toFixed(2) : "0.00"} ETH
             </Text>
-            <TouchableOpacity 
-    onPress={handleRefresh}
-    style={styles.refreshButton}
->
-    <Text style={styles.refreshButtonText}>↻</Text>
-</TouchableOpacity>
+            <TouchableOpacity onPress={handleRefresh} style={styles.refreshButton}>
+              {refreshing ? (
+                <ActivityIndicator color="#00FFEA" />
+              ) : (
+                <Text style={styles.refreshButtonText}>↻</Text>
+              )}
+            </TouchableOpacity>
             <View style={styles.marketGrowthContainer}>
-              <Text style={styles.marketGrowthText}> ETH ≈ ₹{(data.balance * 300000).toFixed(2)} </Text>
+              <Text style={styles.marketGrowthText}>
+                ETH ≈ ₹{(data.balance * 300000).toFixed(2)}
+              </Text>
             </View>
 
             <View style={styles.buttonRow}>

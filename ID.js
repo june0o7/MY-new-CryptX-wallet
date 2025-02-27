@@ -42,7 +42,7 @@ fetch();
         </TouchableOpacity>
       </View>
       <View style={styles.userid}>
-        <Text style={styles.useridText}>User ID : 1120210@cr</Text>
+        <Text style={styles.useridText}>User ID : {data && data.uid}</Text>
       </View>
       <Text style={styles.nameText}>Mr. {data && data.name}</Text>
       

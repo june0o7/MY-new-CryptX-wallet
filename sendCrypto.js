@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   Text,
@@ -14,22 +14,15 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { getAuth } from 'firebase/auth';
 import { ethers } from 'ethers';
-import { doc, getFirestore, getDoc, collection, getDocs } from 'firebase/firestore';
+import { doc, getFirestore, getDoc, collection, getDocs, updateDoc } from 'firebase/firestore';
 import app from './firebaseConfig';
-import ConfettiCannon from 'react-native-confetti-cannon'; // For confetti animation
+import ConfettiCannon from 'react-native-confetti-cannon';
 
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-function Pay(props) {
-  const ganacheUrl = "http://192.168.29.107:7545"; // home
-  // const ganacheUrl = "http://192.168.0.172:7545";
-  const provider = new ethers.JsonRpcProvider(ganacheUrl, {
-    name: 'ganache',
-    chainId: 1337,
-  });
-
-  const [payTo, setPayTo] = useState('');
+function SendCrypto({ route, navigation }) {
+  const { user } = route.params; // Recipient user data
   const [amount, setAmount] = useState('');
   const [transactionStatus, setTransactionStatus] = useState('');
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -42,24 +35,23 @@ function Pay(props) {
   const [showConfetti, setShowConfetti] = useState(false);
   const fadeAnim = useState(new Animated.Value(0))[0]; // For fade-in animation
 
-
-
-
-
-
+  const provider = new ethers.JsonRpcProvider('http://192.168.29.107:7545', {
+    name: 'ganache',
+    chainId: 1337,
+  });
 
   // Fetch balance from Firestore
   const fetchBalance = async () => {
     setIsLoading(true);
     try {
-      const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
+      const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid));
       if (userDoc.exists()) {
         const userData = userDoc.data();
         setBalance(userData.balance || '0.0');
       }
     } catch (error) {
-      console.error("Error fetching balance:", error);
-      Alert.alert("Error", "Failed to fetch balance.");
+      console.error('Error fetching balance:', error);
+      Alert.alert('Error', 'Failed to fetch balance.');
     } finally {
       setIsLoading(false);
     }
@@ -71,105 +63,60 @@ function Pay(props) {
   }, []);
 
   // Send ETH function
-  const sendEth = async (senderPrivateKey, recipientAddress, ethamount) => {
-    if (!senderPrivateKey || !recipientAddress || !ethamount) {
-      Alert.alert("Error", "Missing sender private key, recipient address, or amount.");
+  const sendEth = async () => {
+    if (!amount) {
+      Alert.alert('Error', 'Please enter an amount.');
       return;
     }
 
-    const senderWallet = new ethers.Wallet(senderPrivateKey, provider);
-    const amount = ethers.parseEther(ethamount);
+    setIsLoading(true);
 
     try {
-      console.log("Sending transaction...");
+      const senderDoc = await getDoc(doc(db, 'users', auth.currentUser.uid));
+      const senderData = senderDoc.data();
+      const senderPrivateKey = senderData.privateKey;
+
+      const senderWallet = new ethers.Wallet(senderPrivateKey, provider);
       const tx = await senderWallet.sendTransaction({
-        to: recipientAddress,
-        value: amount,
+        to: user.walletAddress,
+        value: ethers.parseEther(amount),
       });
 
-      console.log("Transaction hash:", tx.hash);
+      console.log('Transaction hash:', tx.hash);
       await tx.wait();
-      console.log("Transaction completed");
+      console.log('Transaction completed');
 
       // Trigger UI updates after successful transaction
       handlePayment();
       setShowConfetti(true); // Show confetti animation
       setTimeout(() => setShowConfetti(false), 5000); // Hide confetti after 5 seconds
-      // Alert.alert("Success", "Transaction sent successfully.");
     } catch (error) {
-      console.error("Transaction failed:", error);
-      Alert.alert("Error", "Failed to send transaction.");
-    }
-  };
-
-  // Send function to handle payment logic
-  const send = async () => {
-    if (!payTo || !amount) {
-      Alert.alert("Error", "Please enter recipient address/phone and amount.");
-      return;
-    }
-
-    const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
-    if (!userDoc.exists()) {
-      Alert.alert("Error", "User data not found.");
-      return;
-    }
-
-    const data = userDoc.data();
-    const pkey = data.privateKey;
-    let walletFound = false;
-
-    console.log("Sender's private key:", pkey);
-    console.log(`TO: ${payTo} Amount: ${amount}`);
-
-    if (/^\d+$/.test(payTo)) {
-      console.log("payto contains phone number");
-      const usersCollection = collection(db, "users");
-      const usersSnapshot = await getDocs(usersCollection);
-
-      for (const userDoc of usersSnapshot.docs) {
-        const userData = userDoc.data();
-        if (userData.phone === payTo) {
-          if (!userData.walletaddress) {
-            Alert.alert("Error", "Recipient wallet address not found.");
-            return;
-          }
-          console.log("Recipient wallet found:", userData.walletaddress);
-          walletFound = true;
-          await sendEth(pkey, userData.walletaddress, amount);
-          break;
-        }
-      }
-
-      if (!walletFound) {
-        Alert.alert("Error", "No user with that phone number found.");
-      }
-    } else {
-      console.log("payto is wallet address");
-      await sendEth(pkey, payTo, amount);
+      console.error('Transaction failed:', error);
+      Alert.alert('Error', 'Failed to send transaction.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   // Handle payment UI updates
   const handlePayment = () => {
-    if (!payTo || !amount) {
-      Alert.alert('Error', 'Please enter recipient address/phone and amount.');
+    if (!amount) {
+      Alert.alert('Error', 'Please enter an amount.');
       return;
     }
 
     setIsModalVisible(false); // Close the modal
-    setTransactionStatus(`Sending ${amount} ETH to ${payTo}...`);
+    setTransactionStatus(`Sending ${amount} ETH to ${user.name}...`);
 
     setTimeout(() => {
       setTransactionStatus('Transaction successful!');
-      setPayTo('');
       setAmount('');
       setTransactions([
         {
           id: transactions.length + 1,
           type: 'Sent',
           amount: parseFloat(amount),
-          to: payTo,
+          to: user.name,
           date: new Date().toISOString().split('T')[0],
         },
         ...transactions,
@@ -182,8 +129,8 @@ function Pay(props) {
 
   // Confirm transaction
   const confirmTransaction = () => {
-    if (!payTo || !amount) {
-      Alert.alert("Error", "Please enter recipient address/phone and amount.");
+    if (!amount) {
+      Alert.alert('Error', 'Please enter an amount.');
       return;
     }
     setIsModalVisible(true);
@@ -199,16 +146,11 @@ function Pay(props) {
   }, [transactions]);
 
   return (
-    <LinearGradient
-      colors={['#0A0A0A', '#1A1A2E', '#16213E']}
-      style={styles.container}
-    >
+    <LinearGradient colors={['#0A0A0A', '#1A1A2E', '#16213E']} style={styles.container}>
       <View style={styles.content}>
         {/* Balance Display */}
         <View style={styles.balanceContainer}>
-        <Text style={styles.balanceText}>
-  Current Balance: {parseFloat(balance).toFixed(2)} ETH
-</Text>
+          <Text style={styles.balanceText}>Current Balance: {parseFloat(balance).toFixed(2)} ETH</Text>
           <TouchableOpacity style={styles.refreshButton} onPress={fetchBalance}>
             {isLoading ? (
               <ActivityIndicator color="#00FFEA" />
@@ -218,14 +160,13 @@ function Pay(props) {
           </TouchableOpacity>
         </View>
 
-        {/* Recipient Address Input */}
-        <TextInput
-          style={styles.input}
-          placeholder="Enter Recipient Address/Phone"
-          placeholderTextColor="#6C6C6C"
-          value={payTo}
-          onChangeText={setPayTo}
-        />
+        {/* Recipient Info */}
+        <View style={styles.infoBox}>
+          <Text style={styles.infoLabel}>Recipient:</Text>
+          <Text style={styles.infoText}>{user.name}</Text>
+          <Text style={styles.infoLabel}>Wallet Address:</Text>
+          <Text style={styles.infoText}>{user.walletAddress}</Text>
+        </View>
 
         {/* Amount Input */}
         <TextInput
@@ -276,12 +217,12 @@ function Pay(props) {
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <Text style={styles.modalText}>Confirm Transaction</Text>
-            <Text style={styles.modalText}>Send {amount} ETH to {payTo}?</Text>
+            <Text style={styles.modalText}>Send {amount} ETH to {user.name}?</Text>
             <View style={styles.modalButtons}>
               <TouchableOpacity style={styles.modalButton} onPress={() => setIsModalVisible(false)}>
                 <Text style={styles.modalButtonText}>Cancel</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.modalButton} onPress={send}>
+              <TouchableOpacity style={styles.modalButton} onPress={sendEth}>
                 <Text style={styles.modalButtonText}>Confirm</Text>
               </TouchableOpacity>
             </View>
@@ -329,6 +270,22 @@ const styles = StyleSheet.create({
   refreshButtonText: {
     fontSize: 24,
     color: '#00FFEA',
+  },
+  infoBox: {
+    backgroundColor: '#1A1A2E',
+    borderRadius: 10,
+    padding: 15,
+    marginBottom: 20,
+  },
+  infoLabel: {
+    color: '#00FFEA',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  infoText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    marginTop: 5,
   },
   input: {
     width: '100%',
@@ -419,4 +376,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Pay;
+export default SendCrypto;

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { StyleSheet, Text, View, StatusBar, TextInput, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, StatusBar, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -13,6 +13,11 @@ export default function Login() {
     const navigator = useNavigation();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+
+    const [loading, setLoading]= useState(false);
+
+    const [logInPressed, setLoginPressed]= useState(false);
+
 
     return (
         <LinearGradient
@@ -49,11 +54,16 @@ export default function Login() {
                 <TouchableOpacity
                     activeOpacity={0.8}
                     onPressIn={() => { setPressed(true); setT2color('#0A0A0A'); }}
-                    onPressOut={() => { setPressed2(false); setT2color('#00FFEA'); }}
+                    onPressOut={() => { setPressed(false); setT2color('#00FFEA'); }}
                     onPress={() => {
+                        setLoading(true);
                         signInWithEmailAndPassword(auth, email, password)
-                            .then(() => { navigator.navigate('Main'); })
-                            .catch((error) => { alert("Invalid Credentials"); });
+                            .then(() => { navigator.navigate('Main'); 
+                                setLoading(false);
+                            })
+                            .catch((error) => { alert("Invalid Credentials");
+                                setLoading(false);
+                             });
                     }}
                     style={[styles.button, pressed ? styles.buttonPressed : null]}
                 >
@@ -62,8 +72,8 @@ export default function Login() {
 
                 <TouchableOpacity
                     activeOpacity={0.8}
-                    onPressIn={() => { setPressed2(true); setTcolor('#0A0A0A'); }}
-                    onPressOut={() => { setPressed2(false); setTcolor('#00FFEA'); }}
+                    onPressIn={() => { setPressed2(true); console.log("pressed2: "+pressed2); setTcolor('#0A0A0A'); }}
+                    onPressOut={() => { setPressed2(false); console.log("pressed "+ pressed2); setTcolor('#00FFEA'); }}
                     onPress={() => { navigator.navigate('SignUp'); }}
                     style={[styles.button, pressed2 ? styles.buttonPressed : null]}
                 >
@@ -73,6 +83,18 @@ export default function Login() {
                 <TouchableOpacity>
                     <Text style={styles.forgotPassword}>Forgot Password?</Text>
                 </TouchableOpacity>
+
+                
+                <View>
+                    
+                    <Text style={{color:"#6C6C6C"}}>
+                        
+                        Version   2.0.6
+                        </Text>
+                </View>
+                {
+                    loading && (<ActivityIndicator size="large" color="#00FFEA" />)
+                }
             </View>
         </LinearGradient>
     );

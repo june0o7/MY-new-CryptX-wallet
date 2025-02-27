@@ -10,6 +10,7 @@ import Ab from "./Ab";
 import Pay from "./pay";
 import PayToContact from "./PayToContact";
 import Login from "./Login";
+import sendCrypto from "./sendCrypto";
 
 function Main({ navigation }) {
   const Drawer = createDrawerNavigator();
@@ -64,21 +65,21 @@ function Main({ navigation }) {
           >
             <Image
               source={require("./assets/icons/profile.png")}
-              style={styles.iconImage}
+              style={{height:35,width:35,shadowColor:"#00FFEA" }}
             />
           </TouchableOpacity>
         ),
       })}
     >
-      {/* Screens */}
+
       <Drawer.Screen
         name="Home"
         component={Home}
         options={{
           drawerIcon: () => (
             <Image
-              source={require("./assets/icons/home.png")}
-              style={{ height: 20, width: 20, tintColor: "#00FFEA" }}
+            source={require("./assets/icons/home.png")}
+            style={{ height: 20, width: 20, tintColor: "#00FFEA" }}
             />
           ),
         }}
@@ -89,8 +90,8 @@ function Main({ navigation }) {
         options={{
           drawerIcon: () => (
             <Image
-              source={require("./assets/icons/cash-payment-icon-5.png")}
-              style={{ height: 23, width: 23, tintColor: "#00FFEA" }}
+            source={require("./assets/icons/cash-payment-icon-5.png")}
+            style={{ height: 23, width: 23, tintColor: "#00FFEA" }}
             />
           ),
         }}
@@ -101,12 +102,21 @@ function Main({ navigation }) {
         options={{
           drawerIcon: () => (
             <Image
-              source={require("./assets/icons/paytocontact.png")}
-              style={{ height: 20, width: 20, tintColor: "#00FFEA" }}
+            source={require("./assets/icons/paytocontact.png")}
+            style={{ height: 20, width: 20, tintColor: "#00FFEA" }}
             />
           ),
         }}
       />
+        {/* Screens */}<Drawer.Screen name="sendcrypto" component={sendCrypto} options={{
+          drawerItemStyle: { display: 'none' },
+          drawerIcon: () => (
+            <Image
+            source={require("./assets/icons/uparrow.png")}
+            style={{ height: 20, width: 20, tintColor: "#00FFEA" }}
+            />
+          ),
+        }}/>
       <Drawer.Screen
         name="Wallet"
         component={Wallet}

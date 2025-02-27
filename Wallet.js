@@ -149,8 +149,10 @@ const Wallet = () => {
             const senderWallet = new ethers.Wallet(senderPrivateKey, provider);
             const amount = ethers.parseEther("0.01");
             
+
             const tx = await senderWallet.sendTransaction({
-                to: "0x3e2058885342e874774c2FA6cB18A0398931Ed1f",
+                // to: "0xef621ced5c5920f3827ee872b1dBB987F33c5796",
+                to: 0x3e2058885342e874774c2FA6cB18A0398931Ed1f,
                 value: amount,
             });
             
