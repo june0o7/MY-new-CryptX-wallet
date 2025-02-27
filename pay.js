@@ -11,10 +11,11 @@ import {
   ActivityIndicator,
   Animated,
 } from 'react-native';
+import { arrayUnion } from "firebase/firestore";
 import { LinearGradient } from 'expo-linear-gradient';
 import { getAuth } from 'firebase/auth';
 import { ethers } from 'ethers';
-import { doc, getFirestore, getDoc, collection, getDocs } from 'firebase/firestore';
+import { doc, getFirestore, getDoc, collection, getDocs,updateDoc } from 'firebase/firestore';
 import app from './firebaseConfig';
 import ConfettiCannon from 'react-native-confetti-cannon'; // For confetti animation
 
@@ -43,7 +44,67 @@ function Pay(props) {
   const fadeAnim = useState(new Animated.Value(0))[0]; // For fade-in animation
 
 
+//this is upload transaction
 
+const uploadTransaction = async (receiverUid, amt) => {
+  console.log("Uploading transaction...");
+
+  try {
+    const uid = auth.currentUser?.uid;
+    if (!uid) {
+      console.error("No authenticated user found.");
+      return;
+    }
+
+    console.log("Sender UID:", uid);
+    console.log("Receiver UID:", receiverUid);
+    console.log("Amount:", amt);
+
+    const senderRef = doc(db, "users", uid);
+    const receiverRef = doc(db, "users", receiverUid);
+
+    const senderSnap = await getDoc(senderRef);
+    const receiverSnap = await getDoc(receiverRef);
+
+    if (!senderSnap.exists() || !receiverSnap.exists()) {
+      console.error("One or both users not found in Firestore.");
+      return;
+    }
+
+    // Create transaction objects
+    const transactionSent = {
+      type: "sent",
+      sender: uid,
+      receiver: receiverUid,
+      amount: amt,
+      date: new Date().toISOString().split("T")[0],
+    };
+
+    const transactionReceived = {
+      type: "received",
+      sender: uid,
+      receiver: receiverUid,
+      amount: amt,
+      date: new Date().toISOString().split("T")[0],
+    };
+
+    // Update Firestore documents
+    await updateDoc(senderRef, {
+      transactions: arrayUnion(transactionSent),
+    });
+
+    await updateDoc(receiverRef, {
+      transactions: arrayUnion(transactionReceived),
+    });
+
+    console.log("Transaction uploaded successfully.");
+  } catch (error) {
+    console.error("Error uploading transaction:", error);
+  }
+};
+
+
+//this is end of upload transaction
 
 
 
@@ -137,6 +198,7 @@ function Pay(props) {
           console.log("Recipient wallet found:", userData.walletaddress);
           walletFound = true;
           await sendEth(pkey, userData.walletaddress, amount);
+          uploadTransaction(userData.uid, amount);
           break;
         }
       }
@@ -147,6 +209,13 @@ function Pay(props) {
     } else {
       console.log("payto is wallet address");
       await sendEth(pkey, payTo, amount);
+//edited
+      const uData= getDocs(collection(getFirestore(app), "users"));
+      uData.docs.forEach(element => {
+          if(element.walletaddress === payTo){
+            uploadTransaction(element.uid, amount);
+          }
+      });
     }
   };
 
