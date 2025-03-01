@@ -10,7 +10,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 const db = getFirestore(app);
 const auth = getAuth(app);
-
+//all set
 const Wallet = () => {
     
     const ganacheUrl = "http://192.168.29.107:7545";//home 
