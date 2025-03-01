@@ -45,7 +45,7 @@ function Pay(props) {
   const fadeAnim = useState(new Animated.Value(0))[0]; // For fade-in animation
 
 
-//this is upload transaction
+//this is upload transaction cpmplete
 
 const uploadTransaction = async (receiverUid, amt) => {
   console.log("Uploading transaction...");
