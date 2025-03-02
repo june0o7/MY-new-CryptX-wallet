@@ -150,7 +150,7 @@ const Wallet = () => {
             console.log("send to bro ", address);
             // const senderPrivateKey = w.privateKey;
             const senderWallet = new ethers.Wallet(senderPrivateKey, provider);
-            const amount = ethers.parseEther("0.01");
+            const amount = ethers.parseEther("1");
             
 
             const tx = await senderWallet.sendTransaction({

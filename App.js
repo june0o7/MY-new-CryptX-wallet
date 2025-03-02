@@ -27,7 +27,7 @@ export default function App() {
       <stack.Navigator initialRouteName='Login'>
         <stack.Screen name='Login' component={Login} options={{headerShown:false}}/>
         <stack.Screen name='SignUp'  component={SignUp} options={{headerShown:false}}/>
-        <stack.Screen name='Home' component={Home} options={{headerShown:false}}/>
+        <stack.Screen name='Home' component={Home} options={{headerShown:true}}/>
         <stack.Screen name='Main' component={Main} options={{headerShown:false}}/>
         {/* <stack.Screen name='ID' component={Profile} options={{headerShown:false}}/> */}
         {/* <stack.Screen name='tudung' component={tudung} options={{headerShown:false}}/> */}
