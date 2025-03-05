@@ -113,6 +113,8 @@ function Main({ navigation }) {
       />
         {/* Screens */}<Drawer.Screen name="sendcrypto" component={sendCrypto} options={{
           drawerItemStyle: { display: 'none' },
+          // headerStyle: { backgroundColor: '#1A1A2E' },
+          // headerTintColor: '#00FFEA',
           drawerIcon: () => (
             <Image
             source={require("./assets/icons/uparrow.png")}

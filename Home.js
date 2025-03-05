@@ -30,6 +30,9 @@ import {
 } from "firebase/firestore";
 import { LinearGradient } from "expo-linear-gradient";
 import { ethers } from "ethers";
+// import CryptoNews from "./CryptoNews";
+import CryptoNews from "./CryptoNews";
+import CryptoPriceTracker from "./CryptoPriceTracker";
 
 const auth = getAuth(app);
 const db = getFirestore(app);
@@ -171,6 +174,19 @@ function Home({ navigation }) {
             </TouchableOpacity>
             <TouchableOpacity style={styles.quickActionButton}onPress={() => navigation.navigate('Pay')}>
               <Text style={styles.quickActionText}>Pay</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.quickActionButton}onPress={() => navigation.navigate('Transaction History')}>
+              <Text style={styles.quickActionText}>Transactions</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.quickActionsContainer}>
+            
+            <TouchableOpacity style={styles.quickActionButton}onPress={() => navigation.navigate('News')}>
+              <Text style={styles.quickActionText}>News</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.quickActionButton}onPress={() => navigation.navigate('Crypto Price')}>
+              <Text style={styles.quickActionText}>Track Coins</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.quickActionButton}onPress={() => navigation.navigate('Transaction History')}>
               <Text style={styles.quickActionText}>Transactions</Text>

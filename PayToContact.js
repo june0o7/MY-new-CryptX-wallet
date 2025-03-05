@@ -57,7 +57,7 @@ function PayToContact({ navigation }) {
           <TouchableOpacity
             key={user.id}
             style={styles.contacts}
-            onPress={() => navigation.navigate('sendCrypto', { user })}
+            onPress={() => navigation.navigate('sendcrypto', { user })}
           >
             <Image
               source={require('./assets/icons/boy.png')}
