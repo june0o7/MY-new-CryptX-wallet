@@ -41,7 +41,7 @@ function Home({ navigation }) {
   const [balance, setBalance] = useState("0.0");
   const [refreshing, setRefreshing] = useState(false);
 
-  const provider = new ethers.JsonRpcProvider("http://192.168.29.107:7545", {
+  const provider = new ethers.JsonRpcProvider("http://192.168.0.172:7545", {
     name: "ganache",
     chainId: 1337,
   });

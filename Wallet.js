@@ -13,11 +13,12 @@ const auth = getAuth(app);
 //all set
 const Wallet = () => {
     
-    const ganacheUrl = "http://192.168.29.107:7545";//home 
-    // const ganacheUrl = "http://192.168.37.38:7545";//phone  
     
-    // const ganacheUrl = "http://192.168.0.172:7545";
-    // const ganacheUrl = "http://192.168.0.172:7545";
+    const ganacheUrl = "http://192.168.29.107:7545";//rangan - ph 
+      
+    
+    
+    
     const provider = new ethers.JsonRpcProvider(ganacheUrl, {
         name: 'ganache',
         chainId: 1337,
@@ -155,7 +156,7 @@ const Wallet = () => {
 
             const tx = await senderWallet.sendTransaction({
                 // to: "0xef621ced5c5920f3827ee872b1dBB987F33c5796",
-                to: 0x3e2058885342e874774c2FA6cB18A0398931Ed1f,//home
+                to: 0x24C82E6E446Ca0bd7be2E14e83C11c7b3f13134C,//rangan ph
                 // to: 0x6333B8A68A740868AC895aF3b473b9684bbf1501,//ph
                 value: amount,
             });
@@ -179,7 +180,7 @@ const Wallet = () => {
         
         try {//ph
             // const senderPrivateKey = "0x9c2b5478614a465b4fea2df81496721f553f280941d11d9d0cbc1765565bb9c2";
-            const senderPrivateKey = "0x689a190151f56743e65d8f4e0a177239a4cd449a9b3d1574826ef95d3bc37d9b";
+            const senderPrivateKey = "0x6980e71cf3228eb20b6ad4ff588a76349aa6513c187da7928a13e5f7ffd75495";
             const senderWallet = new ethers.Wallet(senderPrivateKey, provider);
             const amount = ethers.parseEther("5");
             
@@ -211,9 +212,9 @@ const Wallet = () => {
                         <Text style={styles.buttonText}>Receive Test ETH</Text>
                     </TouchableOpacity>
                     
-                    <TouchableOpacity style={[styles.button, styles.createButton]} onPress={createWallet}>
-                        <Text style={styles.buttonText}>Create Wallet</Text>
-                    </TouchableOpacity>
+                       {!address ?   <TouchableOpacity style={styles.button} onPress={createWallet}>
+                      <Text style={styles.buttonText}>Create Wallet</Text>
+                    </TouchableOpacity> : null}
                     <TouchableOpacity style={[styles.button, styles.createButton]} onPress={sendtobro}>
                         <Text style={styles.buttonText}>Send Test ETH</Text>
                     </TouchableOpacity>
