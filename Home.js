@@ -41,7 +41,7 @@ function Home({ navigation }) {
   const [balance, setBalance] = useState("0.0");
   const [refreshing, setRefreshing] = useState(false);
 
-  const provider = new ethers.JsonRpcProvider("http://192.168.0.172:7545", {
+  const provider = new ethers.JsonRpcProvider("http://192.168.29.107:7545", {
     name: "ganache",
     chainId: 1337,
   });
@@ -172,8 +172,8 @@ function Home({ navigation }) {
             <TouchableOpacity style={styles.quickActionButton}onPress={() => navigation.navigate('Pay')}>
               <Text style={styles.quickActionText}>Pay</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.quickActionButton}>
-              <Text style={styles.quickActionText}>Scan QR</Text>
+            <TouchableOpacity style={styles.quickActionButton}onPress={() => navigation.navigate('Transaction History')}>
+              <Text style={styles.quickActionText}>Transactions</Text>
             </TouchableOpacity>
           </View>
 

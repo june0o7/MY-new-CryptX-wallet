@@ -12,6 +12,7 @@ import Main from './main';
 // import Tudung from './tudung';
 import PayToContact from './PayToContact';
 import sendCrypto from './sendCrypto';
+import TransactionHistory from './TransactionHistory';
 
 
 
@@ -33,6 +34,8 @@ export default function App() {
         {/* <stack.Screen name='tudung' component={tudung} options={{headerShown:false}}/> */}
         <stack.Screen name="PayToContact" component={PayToContact} options={{headerShown:true}} />
       <stack.Screen name="sendCrypto" component={sendCrypto} options={{headerShown:true}}/>
+      <stack.Screen name="Transaction History" component={TransactionHistory} options={{headerShown:true}}/>
+
       </stack.Navigator>
     </NavigationContainer>
   );

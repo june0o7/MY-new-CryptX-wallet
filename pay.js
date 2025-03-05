@@ -11,21 +11,19 @@ import {
   ActivityIndicator,
   Animated,
 } from 'react-native';
-import { arrayUnion } from "firebase/firestore";
+import { arrayUnion } from 'firebase/firestore';
 import { LinearGradient } from 'expo-linear-gradient';
 import { getAuth } from 'firebase/auth';
 import { ethers } from 'ethers';
-import { doc, getFirestore, getDoc, collection, getDocs,updateDoc } from 'firebase/firestore';
+import { doc, getFirestore, getDoc, collection, getDocs, updateDoc } from 'firebase/firestore';
 import app from './firebaseConfig';
-import ConfettiCannon from 'react-native-confetti-cannon'; // For confetti animation
+import ConfettiCannon from 'react-native-confetti-cannon';
 
 const db = getFirestore(app);
 const auth = getAuth(app);
 
 function Pay(props) {
-  // const ganacheUrl = "http://192.168.37.38:7545"; // ph
-  const ganacheUrl = "http://192.168.29.107:7545"; // home
-  // const ganacheUrl = "http://192.168.0.172:7545";
+  const ganacheUrl = 'http://192.168.29.107:7545'; // home
   const provider = new ethers.JsonRpcProvider(ganacheUrl, {
     name: 'ganache',
     chainId: 1337,
@@ -35,107 +33,104 @@ function Pay(props) {
   const [amount, setAmount] = useState('');
   const [transactionStatus, setTransactionStatus] = useState('');
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [transactions, setTransactions] = useState([
-    { id: 1, type: 'Sent', amount: 0.5, to: 'Rajdeep Pal', date: '2023-10-01' },
-    { id: 2, type: 'Received', amount: 1.2, from: 'Rumpa Paul', date: '2023-10-02' },
-  ]);
+  const [transactions, setTransactions] = useState([]); // Recent transactions
   const [balance, setBalance] = useState('0.0');
   const [isLoading, setIsLoading] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const fadeAnim = useState(new Animated.Value(0))[0]; // For fade-in animation
 
-
-//this is upload transaction cpmplete
-
-const uploadTransaction = async (receiverUid, amt) => {
-  console.log("Uploading transaction...");
-
-  try {
-    const uid = auth.currentUser?.uid;
-    if (!uid) {
-      console.error("No authenticated user found.");
-      return;
-    }
-
-    console.log("Sender UID:", uid);
-    console.log("Receiver UID:", receiverUid);
-    console.log("Amount:", amt);
-
-    const senderRef = doc(db, "users", uid);
-    const receiverRef = doc(db, "users", receiverUid);
-
-    const senderSnap = await getDoc(senderRef);
-    const receiverSnap = await getDoc(receiverRef);
-
-    if (!senderSnap.exists() || !receiverSnap.exists()) {
-      console.error("One or both users not found in Firestore.");
-      return;
-    }
-
-    // Create transaction objects
-    const transactionSent = {
-      type: "sent",
-      sender: uid,
-      receiver: receiverUid,
-      amount: amt,
-      date: new Date().toISOString().split("T")[0],
-    };
-
-    const transactionReceived = {
-      type: "received",
-      sender: uid,
-      receiver: receiverUid,
-      amount: amt,
-      date: new Date().toISOString().split("T")[0],
-    };
-
-    // Update Firestore documents
-    await updateDoc(senderRef, {
-      transactions: arrayUnion(transactionSent),
-    });
-
-    await updateDoc(receiverRef, {
-      transactions: arrayUnion(transactionReceived),
-    });
-
-    console.log("Transaction uploaded successfully.");
-  } catch (error) {
-    console.error("Error uploading transaction:", error);
-  }
-};
-
-
-//this is end of upload transaction
-
-
-
-
-  // Fetch balance from Firestore
-  const fetchBalance = async () => {
+  // Fetch balance and recent transactions from Firestore
+  const fetchData = async () => {
     setIsLoading(true);
     try {
-      const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
+      const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid));
       if (userDoc.exists()) {
         const userData = userDoc.data();
         setBalance(userData.balance || '0.0');
+        setTransactions(userData.transactions || []); // Set recent transactions
       }
     } catch (error) {
-      console.error("Error fetching balance:", error);
-      Alert.alert("Error", "Failed to fetch balance.");
+      console.error('Error fetching data:', error);
+      Alert.alert('Error', 'Failed to fetch data.');
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Fetch balance on component mount
+  // Fetch data on component mount
   useEffect(() => {
-    fetchBalance();
+    fetchData();
   }, []);
+
+  // Upload transaction to Firestore
+  const uploadTransaction = async (receiverUid, amt) => {
+    try {
+      const uid = auth.currentUser?.uid;
+      if (!uid) {
+        console.error('No authenticated user found.');
+        return;
+      }
+
+      const senderRef = doc(db, 'users', uid);
+      const receiverRef = doc(db, 'users', receiverUid);
+
+      const senderSnap = await getDoc(senderRef);
+      const receiverSnap = await getDoc(receiverRef);
+
+      if (!senderSnap.exists() || !receiverSnap.exists()) {
+        console.error('One or both users not found in Firestore.');
+        return;
+      }
+
+      // Create transaction objects
+      const transactionSent = {
+        type: 'sent',
+        sender: uid,
+        receiver: receiverUid,
+        amount: amt,
+        date: new Date().toISOString().split('T')[0],
+      };
+
+      const transactionReceived = {
+        type: 'received',
+        sender: uid,
+        receiver: receiverUid,
+        amount: amt,
+        date: new Date().toISOString().split('T')[0],
+      };
+
+      // Update Firestore documents
+      await updateDoc(senderRef, {
+        transactions: arrayUnion(transactionSent),
+      });
+
+      await updateDoc(receiverRef, {
+        transactions: arrayUnion(transactionReceived),
+      });
+
+      console.log('Transaction uploaded successfully.');
+    } catch (error) {
+      console.error('Error uploading transaction:', error);
+    }
+  };
+
+  // Update balance in Firestore
+  const updateBalance = async (uid, newBalance) => {
+    try {
+      const userRef = doc(db, 'users', uid);
+      await updateDoc(userRef, {
+        balance: newBalance,
+      });
+      console.log('Balance updated successfully.');
+    } catch (error) {
+      console.error('Error updating balance:', error);
+    }
+  };
 
   // Send ETH function
   const sendEth = async (senderPrivateKey, recipientAddress, ethamount) => {
     if (!senderPrivateKey || !recipientAddress || !ethamount) {
-      Alert.alert("Error", "Missing sender private key, recipient address, or amount.");
+      Alert.alert('Error', 'Missing sender private key, recipient address, or amount.');
       return;
     }
 
@@ -143,37 +138,41 @@ const uploadTransaction = async (receiverUid, amt) => {
     const amount = ethers.parseEther(ethamount);
 
     try {
-      console.log("Sending transaction...");
+      console.log('Sending transaction...');
       const tx = await senderWallet.sendTransaction({
         to: recipientAddress,
         value: amount,
       });
 
-      console.log("Transaction hash:", tx.hash);
+      console.log('Transaction hash:', tx.hash);
       await tx.wait();
-      console.log("Transaction completed");
+      console.log('Transaction completed');
+
+      // Update sender's balance
+      const senderBalance = parseFloat(balance) - parseFloat(ethamount);
+      setBalance(senderBalance.toFixed(2));
+      await updateBalance(auth.currentUser.uid, senderBalance.toFixed(2));
 
       // Trigger UI updates after successful transaction
       handlePayment();
       setShowConfetti(true); // Show confetti animation
       setTimeout(() => setShowConfetti(false), 5000); // Hide confetti after 5 seconds
-      // Alert.alert("Success", "Transaction sent successfully.");
     } catch (error) {
-      console.error("Transaction failed:", error);
-      Alert.alert("Error", "Failed to send transaction.");
+      console.error('Transaction failed:', error);
+      Alert.alert('Error', 'Failed to send transaction.');
     }
   };
 
   // Send function to handle payment logic
   const send = async () => {
     if (!payTo || !amount) {
-      Alert.alert("Error", "Please enter recipient address/phone and amount.");
+      Alert.alert('Error', 'Please enter recipient address/phone and amount.');
       return;
     }
 
-    const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
+    const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid));
     if (!userDoc.exists()) {
-      Alert.alert("Error", "User data not found.");
+      Alert.alert('Error', 'User data not found.');
       return;
     }
 
@@ -185,38 +184,42 @@ const uploadTransaction = async (receiverUid, amt) => {
     console.log(`TO: ${payTo} Amount: ${amount}`);
 
     if (/^\d+$/.test(payTo)) {
-      console.log("payto contains phone number");
-      const usersCollection = collection(db, "users");
+      console.log('payto contains phone number');
+      const usersCollection = collection(db, 'users');
       const usersSnapshot = await getDocs(usersCollection);
 
       for (const userDoc of usersSnapshot.docs) {
         const userData = userDoc.data();
         if (userData.phone === payTo) {
           if (!userData.walletaddress) {
-            Alert.alert("Error", "Recipient wallet address not found.");
+            Alert.alert('Error', 'Recipient wallet address not found.');
             return;
           }
-          console.log("Recipient wallet found:", userData.walletaddress);
+          console.log('Recipient wallet found:', userData.walletaddress);
           walletFound = true;
           await sendEth(pkey, userData.walletaddress, amount);
-          uploadTransaction(userData.uid, amount);
+          await uploadTransaction(userData.uid, amount);
           break;
         }
       }
 
       if (!walletFound) {
-        Alert.alert("Error", "No user with that phone number found.");
+        Alert.alert('Error', 'No user with that phone number found.');
       }
     } else {
-      console.log("payto is wallet address");
+      console.log('payto is wallet address');
       await sendEth(pkey, payTo, amount);
-//edited
-      const uData= getDocs(collection(getFirestore(app), "users"));
-      uData.docs.forEach(element => {
-          if(element.walletaddress === payTo){
-            uploadTransaction(element.uid, amount);
-          }
-      });
+
+      // Find recipient UID by wallet address
+      const usersCollection = collection(db, 'users');
+      const usersSnapshot = await getDocs(usersCollection);
+      for (const userDoc of usersSnapshot.docs) {
+        const userData = userDoc.data();
+        if (userData.walletaddress === payTo) {
+          await uploadTransaction(userData.uid, amount);
+          break;
+        }
+      }
     }
   };
 
@@ -234,26 +237,14 @@ const uploadTransaction = async (receiverUid, amt) => {
       setTransactionStatus('Transaction successful!');
       setPayTo('');
       setAmount('');
-      setTransactions([
-        {
-          id: transactions.length + 1,
-          type: 'Sent',
-          amount: parseFloat(amount),
-          to: payTo,
-          date: new Date().toISOString().split('T')[0],
-        },
-        ...transactions,
-      ]);
-
-      // Refresh balance after transaction
-      fetchBalance();
+      fetchData(); // Refresh transactions and balance
     }, 3000); // Simulate a 3-second delay for the transaction
   };
 
   // Confirm transaction
   const confirmTransaction = () => {
     if (!payTo || !amount) {
-      Alert.alert("Error", "Please enter recipient address/phone and amount.");
+      Alert.alert('Error', 'Please enter recipient address/phone and amount.');
       return;
     }
     setIsModalVisible(true);
@@ -269,17 +260,12 @@ const uploadTransaction = async (receiverUid, amt) => {
   }, [transactions]);
 
   return (
-    <LinearGradient
-      colors={['#0A0A0A', '#1A1A2E', '#16213E']}
-      style={styles.container}
-    >
+    <LinearGradient colors={['#0A0A0A', '#1A1A2E', '#16213E']} style={styles.container}>
       <View style={styles.content}>
         {/* Balance Display */}
         <View style={styles.balanceContainer}>
-        <Text style={styles.balanceText}>
-  Current Balance: {parseFloat(balance).toFixed(2)} ETH
-</Text>
-          <TouchableOpacity style={styles.refreshButton} onPress={fetchBalance}>
+          <Text style={styles.balanceText}>Current Balance: {parseFloat(balance).toFixed(2)} ETH</Text>
+          <TouchableOpacity style={styles.refreshButton} onPress={fetchData}>
             {isLoading ? (
               <ActivityIndicator color="#00FFEA" />
             ) : (
@@ -322,9 +308,9 @@ const uploadTransaction = async (receiverUid, amt) => {
         {/* Transaction History */}
         <Text style={styles.historyHeader}>Recent Transactions</Text>
         <ScrollView style={styles.historyContainer}>
-          {transactions.map((tx) => (
+          {transactions.map((tx, index) => (
             <Animated.View
-              key={tx.id}
+              key={index}
               style={[styles.transactionItem, { opacity: fadeAnim }]}
             >
               <LinearGradient
@@ -332,7 +318,7 @@ const uploadTransaction = async (receiverUid, amt) => {
                 style={styles.transactionGradient}
               >
                 <Text style={styles.transactionText}>
-                  {tx.type === 'Sent' ? `Sent ${tx.amount} ETH to ${tx.to}` : `Received ${tx.amount} ETH from ${tx.from}`}
+                  {tx.type === 'sent' ? `Sent ${tx.amount} ETH to ${tx.receiver}` : `Received ${tx.amount} ETH from ${tx.sender}`}
                 </Text>
                 <Text style={styles.transactionDate}>{tx.date}</Text>
               </LinearGradient>
