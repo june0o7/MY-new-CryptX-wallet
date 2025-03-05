@@ -14,6 +14,7 @@ import PayToContact from './PayToContact';
 import sendCrypto from './sendCrypto';
 import TransactionHistory from './TransactionHistory';
 import CryptoNews from './CryptoNews';
+import CryptoPriceTracker from './CryptoPriceTracker';
 
 
 
@@ -37,6 +38,7 @@ export default function App() {
       <stack.Screen name="sendCrypto" component={sendCrypto} options={{headerShown:true}}/>
       <stack.Screen name="Transaction History" component={TransactionHistory} options={{headerShown:true}}/>
       <stack.Screen name="News" component={CryptoNews} options={{headerShown:true}}/>
+      <stack.Screen name="CryptoPriceTracker" component={CryptoPriceTracker} options={{headerShown:true}}/>
 
       </stack.Navigator>
     </NavigationContainer>
