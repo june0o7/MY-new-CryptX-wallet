@@ -12,6 +12,7 @@ import PayToContact from "./PayToContact";
 import Login from "./Login";
 import sendCrypto from "./sendCrypto";
 import TransactionHistory from "./TransactionHistory";
+import CryptoNews from "./CryptoNews";
 
 function Main({ navigation }) {
   const Drawer = createDrawerNavigator();
@@ -138,6 +139,18 @@ function Main({ navigation }) {
             <Image
               source={require("./assets/icons/bill.png")}
               style={{ height: 25, width: 21, tintColor: "#00FFEA" }}
+            />
+          ),
+        }}
+      />
+      <Drawer.Screen
+        name="News"
+        component={CryptoNews}
+        options={{
+          drawerIcon: () => (
+            <Image
+              source={require("./assets/icons/globe.png")}
+              style={{ height: 20, width: 20, tintColor: "#00FFEA" }}
             />
           ),
         }}
