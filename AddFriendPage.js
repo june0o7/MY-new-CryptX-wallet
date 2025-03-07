@@ -7,16 +7,15 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
+  Modal,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import Icon from "react-native-vector-icons/FontAwesome"; // For the green tick
-// import { db } from "./firebase"; // Import Firestore from firebase.js
-import firebase from "firebase/compat/app";
 import { doc, getFirestore, getDoc, collection, getDocs, updateDoc, query, where } from 'firebase/firestore';
-
 import app from './firebaseConfig';
 import { arrayUnion } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth'; 
+import { getAuth } from 'firebase/auth';
+
 const db = getFirestore(app);
 const auth = getAuth(app);
 
@@ -24,7 +23,8 @@ function AddFriendPage({ navigation }) {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [userExists, setUserExists] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [cuid, setCuid]= useState(null);
+  const [cuid, setCuid] = useState(null);
+  const [showModal, setShowModal] = useState(false); // For confirmation modal
 
   // Check if the user exists in the database
   const checkUserExists = async () => {
@@ -36,18 +36,12 @@ function AddFriendPage({ navigation }) {
     setLoading(true);
     try {
       const usersRef = collection(db, "users");
-      console.log("in the user");
       const q = query(usersRef, where("phone", "==", phoneNumber));
-
       const querySnapshot = await getDocs(q);
-       console.log("Querying Firestore for phone number:", phoneNumber);
-      console.log("Query result:", querySnapshot.docs[0].data().uid);
-      const cuid= querySnapshot.docs[0].data().uid;
-      setCuid(cuid);
 
       if (!querySnapshot.empty) {
         setUserExists(true);
-        // Alert.alert("Success", "User exists in the database.");
+        setCuid(querySnapshot.docs[0].data().uid); // Set the friend's UID
       } else {
         setUserExists(false);
         Alert.alert("Error", "User does not exist in the database.");
@@ -66,38 +60,43 @@ function AddFriendPage({ navigation }) {
       Alert.alert("Error", "User does not exist in the database.");
       return;
     }
-  
+
     try {
-      const currentUserRef = await doc(db, "users", getAuth(app).currentUser.uid ); // Replace with actual current user ID
+      const currentUserRef = doc(db, "users", auth.currentUser.uid);
       const currentUserSnap = await getDoc(currentUserRef);
-     // console.log("current user id", currentUserId);
-      console.log("1_:", currentUserSnap.data());
-      
+
       if (currentUserSnap.exists()) {
-        console.log("2");
         const userData = currentUserSnap.data();
-        console.log("3");
-        
+
         // If "friends" field doesn't exist, initialize it as an empty array
         if (!userData.friends) {
           await updateDoc(currentUserRef, { friends: [] });
         }
-  
+
         // Add friend to the array
         await updateDoc(currentUserRef, {
           friends: arrayUnion(phoneNumber),
         });
-  
+
         Alert.alert("Success", "Friend saved successfully!");
+        refreshPage(); // Refresh the page after saving
       } else {
         Alert.alert("Error", "User document does not exist.");
       }
     } catch (error) {
       console.error("Error saving friend:", error);
       Alert.alert("Error", "Failed to save friend.");
+    } finally {
+      setShowModal(false); // Close the modal
     }
   };
-  
+
+  // Refresh the page
+  const refreshPage = () => {
+    setPhoneNumber("");
+    setUserExists(false);
+    setCuid(null);
+  };
 
   return (
     <LinearGradient
@@ -131,12 +130,43 @@ function AddFriendPage({ navigation }) {
 
         <TouchableOpacity
           style={[styles.button, !userExists && styles.disabledButton]}
-          onPress={saveFriend}
+          onPress={() => setShowModal(true)} // Open modal on save
           disabled={!userExists}
         >
           <Text style={styles.buttonText}>Save Friend</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Confirmation Modal */}
+      <Modal
+        visible={showModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowModal(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalText}>Confirm Add Friend</Text>
+            <Text style={styles.modalText}>
+              Are you sure you want to add this user as a friend?
+            </Text>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.modalButton}
+                onPress={() => setShowModal(false)} // Close modal
+              >
+                <Text style={styles.modalButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalButton}
+                onPress={saveFriend} // Confirm and save
+              >
+                <Text style={styles.modalButtonText}>Confirm</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </LinearGradient>
   );
 }
@@ -192,6 +222,40 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#00FFEA",
     marginLeft: 10,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  modalContent: {
+    backgroundColor: "#1A1A2E",
+    padding: 20,
+    borderRadius: 10,
+    width: "80%",
+  },
+  modalText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    marginBottom: 20,
+    textAlign: "center",
+  },
+  modalButtons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  modalButton: {
+    backgroundColor: "#00FFEA",
+    padding: 10,
+    borderRadius: 5,
+    width: "45%",
+    alignItems: "center",
+  },
+  modalButtonText: {
+    color: "#0A0A0A",
+    fontSize: 16,
+    fontWeight: "bold",
   },
 });
 
