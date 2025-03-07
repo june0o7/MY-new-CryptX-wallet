@@ -14,6 +14,7 @@ import sendCrypto from "./sendCrypto";
 import TransactionHistory from "./TransactionHistory";
 import CryptoNews from "./CryptoNews";
 import CryptoPriceTracker from "./CryptoPriceTracker";
+import AddFriendPage from "./AddFriendPage";
 
 function Main({ navigation }) {
   const Drawer = createDrawerNavigator();
@@ -102,6 +103,18 @@ function Main({ navigation }) {
       <Drawer.Screen
         name="Pay To Contact"
         component={PayToContact}
+        options={{
+          drawerIcon: () => (
+            <Image
+            source={require("./assets/icons/paytocontact.png")}
+            style={{ height: 20, width: 20, tintColor: "#00FFEA" }}
+            />
+          ),
+        }}
+      />
+      <Drawer.Screen
+        name="Add To Contact"
+        component={AddFriendPage}
         options={{
           drawerIcon: () => (
             <Image

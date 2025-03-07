@@ -14,7 +14,7 @@ const auth = getAuth(app);
 const Wallet = () => {
     
     
-    const ganacheUrl = "http://192.168.29.107:7545";//rangan - ph 
+    const ganacheUrl = "http://192.168.0.172:7545";//home 2
       
     
     
@@ -156,7 +156,7 @@ const Wallet = () => {
 
             const tx = await senderWallet.sendTransaction({
                 // to: "0xef621ced5c5920f3827ee872b1dBB987F33c5796",
-                to: 0x24C82E6E446Ca0bd7be2E14e83C11c7b3f13134C,//rangan ph
+                to: 0xef621ced5c5920f3827ee872b1dBB987F33c5796,//home 2
                 // to: 0x6333B8A68A740868AC895aF3b473b9684bbf1501,//ph
                 value: amount,
             });
@@ -180,7 +180,7 @@ const Wallet = () => {
         
         try {//ph
             // const senderPrivateKey = "0x9c2b5478614a465b4fea2df81496721f553f280941d11d9d0cbc1765565bb9c2";
-            const senderPrivateKey = "0x6980e71cf3228eb20b6ad4ff588a76349aa6513c187da7928a13e5f7ffd75495";
+            const senderPrivateKey = "0x8b182bcb2462573fe1aa529265279b95776d83f603bb7c35a232e819c8214b45";
             const senderWallet = new ethers.Wallet(senderPrivateKey, provider);
             const amount = ethers.parseEther("5");
             

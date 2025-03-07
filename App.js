@@ -15,6 +15,7 @@ import sendCrypto from './sendCrypto';
 import TransactionHistory from './TransactionHistory';
 import CryptoNews from './CryptoNews';
 import CryptoPriceTracker from './CryptoPriceTracker';
+import AddFriendPage from './AddFriendPage';
 
 
 
@@ -39,6 +40,7 @@ export default function App() {
       <stack.Screen name="Transaction History" component={TransactionHistory} options={{headerShown:true}}/>
       <stack.Screen name="News" component={CryptoNews} options={{headerShown:true}}/>
       <stack.Screen name="CryptoPriceTracker" component={CryptoPriceTracker} options={{headerShown:true}}/>
+      <stack.Screen name="AddFriendPage" component={AddFriendPage} options={{headerShown:true}} />
 
       </stack.Navigator>
     </NavigationContainer>

@@ -33,6 +33,7 @@ import { ethers } from "ethers";
 // import CryptoNews from "./CryptoNews";
 import CryptoNews from "./CryptoNews";
 import CryptoPriceTracker from "./CryptoPriceTracker";
+import axios from "axios";
 
 const auth = getAuth(app);
 const db = getFirestore(app);
@@ -43,11 +44,69 @@ function Home({ navigation }) {
   const [address, setAddress] = useState("");
   const [balance, setBalance] = useState("0.0");
   const [refreshing, setRefreshing] = useState(false);
+  const [cryptoPrices, setCryptoPrices] = useState([]);
+  const [cryptoNews, setCryptoNews] = useState([]);
+  const [portfolioData, setPortfolioData] = useState({});
 
-  const provider = new ethers.JsonRpcProvider("http://192.168.29.107:7545", {
+  const provider = new ethers.JsonRpcProvider("http://192.168.0.172:7545", {
     name: "ganache",
     chainId: 1337,
   });
+
+
+  const fetchCryptoPrices = async () => {
+    try {
+      const response = await axios.get(
+        "https://api.coincap.io/v2/assets?limit=10"
+      );
+      return response.data.data.map((crypto) => ({
+        name: crypto.name,
+        symbol: crypto.symbol,
+        priceUsd: parseFloat(crypto.priceUsd).toFixed(2), // Use priceUsd instead of current_price
+        image: `https://assets.coincap.io/assets/icons/${crypto.symbol.toLowerCase()}@2x.png`,
+      }));
+    } catch (error) {
+      console.error("Error fetching crypto prices:", error);
+      return [];
+    }
+  };
+  
+
+  const fetchCryptoNews = async () => {
+    try {
+      const response = await axios.get(
+        "https://cryptopanic.com/api/v1/posts/?auth_token=0b506b16c9ef6df9a91aeb3a21f676ec5fa39ec6&public=true"
+      );
+      return response.data.results;
+    } catch (error) {
+      console.error("Error fetching crypto news:", error);
+      return [];
+    }
+  };
+
+  const fetchPortfolioPerformance = async () => {
+    try {
+      const response = await axios.get(
+        "https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=ETH&apikey=YFDW04QSAAVDHGQY"
+      );
+      return response.data["Time Series (Daily)"];
+    } catch (error) {
+      console.error("Error fetching portfolio performance:", error);
+      return {};
+    }
+  };
+  const fetchAllData = async () => {
+    setRefreshing(true);
+    await fetchData();
+    const prices = await fetchCryptoPrices();
+    const news = await fetchCryptoNews();
+    const portfolio = await fetchPortfolioPerformance();
+
+    setCryptoPrices(prices);
+    setCryptoNews(news);
+    setPortfolioData(portfolio);
+    setRefreshing(false);
+  };
 
   const fetchData = async () => {
     try {
@@ -188,8 +247,8 @@ function Home({ navigation }) {
             <TouchableOpacity style={styles.quickActionButton}onPress={() => navigation.navigate('Crypto Price')}>
               <Text style={styles.quickActionText}>Track Coins</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.quickActionButton}onPress={() => navigation.navigate('Transaction History')}>
-              <Text style={styles.quickActionText}>Transactions</Text>
+            <TouchableOpacity style={styles.quickActionButton}onPress={() => navigation.navigate('Add To Contact')}>
+              <Text style={styles.quickActionText}>Contacts</Text>
             </TouchableOpacity>
           </View>
 
@@ -198,6 +257,25 @@ function Home({ navigation }) {
           <View style={styles.chartPlaceholder}>
             <Text style={styles.chartPlaceholderText}>Chart Placeholder</Text>
           </View>
+             
+          {/* new section    */}
+          <Text style={styles.sectionHeader}>Top Cryptos</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+  {cryptoPrices.map((crypto, index) => (
+    <View key={index} style={styles.cryptoCard}>
+      <Image
+        source={{ uri: crypto.image }}
+        onError={() => (crypto.image = "https://via.placeholder.com/50")}
+        style={styles.cryptoImage}
+      />
+      <Text style={styles.cryptoName}>{crypto.name}</Text>
+      <Text style={styles.cryptoPrice}>${crypto.priceUsd}</Text> {/* Use priceUsd */}
+    </View>
+  ))}
+</ScrollView>
+
+
+        
 
           {/* Existing Popular Section */}
           <Text style={styles.sectionHeader}>Popular</Text>
@@ -395,6 +473,30 @@ const styles = StyleSheet.create({
     color: "#00FFEA",
     fontSize: 30,
     fontWeight: "bold",
+  },
+  cryptoCard: {
+    backgroundColor: "#1A1A2E",
+    borderRadius: 10,
+    padding: 15,
+    marginRight: 10,
+    alignItems: "center",
+    width: 120, // Adjust width as needed
+  },
+  cryptoImage: {
+    width: 50,
+    height: 50,
+    marginBottom: 10,
+  },
+  cryptoName: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "bold",
+    textAlign: "center",
+  },
+  cryptoPrice: {
+    color: "#00FFEA",
+    fontSize: 14,
+    marginTop: 5,
   },
   balanceLabel: {
     color: "#00FFEA",
