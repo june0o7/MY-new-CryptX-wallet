@@ -48,7 +48,7 @@ function Home({ navigation }) {
   const [cryptoNews, setCryptoNews] = useState([]);
   const [portfolioData, setPortfolioData] = useState({});
 
-  const provider = new ethers.JsonRpcProvider("http://192.168.0.172:7545", {
+  const provider = new ethers.JsonRpcProvider("http://192.168.29.107:7545", {
     name: "ganache",
     chainId: 1337,
   });
@@ -153,7 +153,7 @@ function Home({ navigation }) {
 
         // Update the local state to reflect the new balance
         setBalance(ethBalance);
-        Alert.alert("Success", "Balance updated successfully!");
+        // Alert.alert("Success", "Balance updated successfully!");
       } else {
         Alert.alert("Error", "User not authenticated.");
       }
@@ -253,13 +253,15 @@ function Home({ navigation }) {
           </View>
 
           {/* New: Portfolio Performance Chart */}
-          <Text style={styles.sectionHeader}>Portfolio Performance</Text>
+          {/* <Text style={styles.sectionHeader}>Portfolio Performance</Text>
           <View style={styles.chartPlaceholder}>
             <Text style={styles.chartPlaceholderText}>Chart Placeholder</Text>
-          </View>
+          </View> */}
              
           {/* new section    */}
-          <Text style={styles.sectionHeader}>Top Cryptos</Text>
+         
+         
+          {/* <Text style={styles.sectionHeader}>Top Cryptos</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
   {cryptoPrices.map((crypto, index) => (
     <View key={index} style={styles.cryptoCard}>
@@ -269,10 +271,10 @@ function Home({ navigation }) {
         style={styles.cryptoImage}
       />
       <Text style={styles.cryptoName}>{crypto.name}</Text>
-      <Text style={styles.cryptoPrice}>${crypto.priceUsd}</Text> {/* Use priceUsd */}
+      <Text style={styles.cryptoPrice}>${crypto.priceUsd}</Text> 
     </View>
   ))}
-</ScrollView>
+    </ScrollView> */}
 
 
         
