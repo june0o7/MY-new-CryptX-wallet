@@ -1,16 +1,29 @@
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import Login from './Login';
-import { Component } from 'react';
-import { NavigationContainer } from '@react-navigation/native';
-// import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import ID from './ID';
+import { useNavigation } from '@react-navigation/native';
+import { getAuth, signOut } from 'firebase/auth';
+import app from './firebaseConfig';
 
-function Set({ navigation }) {
-    const handlePress = (section) => {
-        // Add your navigation/handling logic here
-        console.log(`Pressed: ${section}`);
-        // Component={Login};
+const auth = getAuth(app);
+
+function Set() {
+    const navigation = useNavigation();
+
+    // Handle Sign Out
+    const handleSignOut = async () => {
+        try {
+            await signOut(auth);
+            navigation.navigate('Login'); // Navigate to the Login screen
+        } catch (error) {
+            console.error('Error signing out:', error);
+            alert('Failed to sign out. Please try again.');
+        }
+    };
+
+    // Handle Lock App
+    const handleLockApp = () => {
+        // Implement your lock app logic here
+        alert('App locked!');
     };
 
     return (
@@ -19,22 +32,51 @@ function Set({ navigation }) {
             style={styles.container}
         >
             <View style={styles.content}>
-                <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('lD')}>
+                {/* Personal Info */}
+                <TouchableOpacity
+                    style={styles.button}
+                    onPress={() => navigation.navigate('profile')}
+                >
                     <Text style={styles.buttonText}>Personal Info</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.button} onPress={() => handlePress('Notifications')}>
+
+                {/* Notifications */}
+                <TouchableOpacity
+                    style={styles.button}
+                    onPress={() => navigation.navigate('Notifications')}
+                >
                     <Text style={styles.buttonText}>Notifications</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.button} onPress={() => handlePress('Privacy and Security')}>
+
+                {/* Privacy and Security */}
+                <TouchableOpacity
+                    style={styles.button}
+                    onPress={() => navigation.navigate('PrivacyAndSecurity')}
+                >
                     <Text style={styles.buttonText}>Privacy and Security</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.button} onPress={() => handlePress('Help & Feedback')}>
+
+                {/* Help & Feedback */}
+                <TouchableOpacity
+                    style={styles.button}
+                    onPress={() => navigation.navigate('HelpAndFeedback')}
+                >
                     <Text style={styles.buttonText}>Help & Feedback</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.button} onPress={() => handlePress('Lock App')}>
+
+                {/* Lock App */}
+                <TouchableOpacity
+                    style={styles.button}
+                    onPress={handleLockApp}
+                >
                     <Text style={styles.buttonText}>Lock App</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={[styles.button, styles.signOutButton]} onPress={() => navigation.navigate('Login')}>
+
+                {/* Sign Out */}
+                <TouchableOpacity
+                    style={[styles.button, styles.signOutButton]}
+                    onPress={handleSignOut}
+                >
                     <Text style={styles.buttonText}>Sign Out</Text>
                 </TouchableOpacity>
             </View>
@@ -64,15 +106,13 @@ const styles = StyleSheet.create({
         color: '#00FFEA',
         fontSize: 18,
         fontWeight: 'bold',
-        // fontWeight: 'bold',
-        // color: '#00FFEA', // Neon blue text
-        textShadowColor: '#00FFEA', // Neon glow effect
+        textShadowColor: '#00FFEA',
         textShadowOffset: { width: 0, height: 0 },
         textShadowRadius: 10,
     },
     signOutButton: {
-        borderColor: '#FF5733', // Orange border for Sign Out button
-        backgroundColor: '#2A0A0A', // Darker background for Sign Out button
+        borderColor: '#FF5733',
+        backgroundColor: '#2A0A0A',
     },
 });
 

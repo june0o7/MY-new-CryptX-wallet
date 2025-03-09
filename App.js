@@ -16,8 +16,9 @@ import TransactionHistory from './TransactionHistory';
 import CryptoNews from './CryptoNews';
 import CryptoPriceTracker from './CryptoPriceTracker';
 import AddFriendPage from './AddFriendPage';
-
-
+import Notifications from './Notifications';
+import HelpAndFeedback from './HelpAndFeedback';
+import PrivacyAndSecurity from './PrivacyAndSecurity';
 
 export default function App() {
 
@@ -28,12 +29,17 @@ export default function App() {
   return (
       
     <NavigationContainer>
-      <stack.Navigator initialRouteName='Login'>
+      <stack.Navigator initialRouteName='Login'
+      screenOptions={{
+        headerStyle: { backgroundColor: '#1A1A2E' }, // Change background color
+        headerTintColor: '#FFFFFF', // Change text color
+        headerTitleStyle: { fontWeight: 'bold' } // Optional: Make title bold
+      }}>
         <stack.Screen name='Login' component={Login} options={{headerShown:false}}/>
         <stack.Screen name='SignUp'  component={SignUp} options={{headerShown:false}}/>
         <stack.Screen name='Home' component={Home} options={{headerShown:true}}/>
         <stack.Screen name='Main' component={Main} options={{headerShown:false}}/>
-        {/* <stack.Screen name='ID' component={Profile} options={{headerShown:false}}/> */}
+        {/* <stack.Screen name='ID' component={ID} options={{headerShown:true}}/> */}
         {/* <stack.Screen name='tudung' component={tudung} options={{headerShown:false}}/> */}
         <stack.Screen name="PayToContact" component={PayToContact} options={{headerShown:true}} />
       <stack.Screen name="sendCrypto" component={sendCrypto} options={{headerShown:true}}/>
@@ -41,7 +47,9 @@ export default function App() {
       <stack.Screen name="News" component={CryptoNews} options={{headerShown:true}}/>
       <stack.Screen name="CryptoPriceTracker" component={CryptoPriceTracker} options={{headerShown:true}}/>
       <stack.Screen name="AddFriendPage" component={AddFriendPage} options={{headerShown:true}} />
-
+      <stack.Screen name="Notifications" component={Notifications} />
+                <stack.Screen name="PrivacyAndSecurity" component={PrivacyAndSecurity} />
+                <stack.Screen name="HelpAndFeedback" component={HelpAndFeedback} />
       </stack.Navigator>
     </NavigationContainer>
   );
