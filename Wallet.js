@@ -182,7 +182,7 @@ const Wallet = () => {
             // const senderPrivateKey = "0x9c2b5478614a465b4fea2df81496721f553f280941d11d9d0cbc1765565bb9c2";
             const senderPrivateKey = "0x6980e71cf3228eb20b6ad4ff588a76349aa6513c187da7928a13e5f7ffd75495";
             const senderWallet = new ethers.Wallet(senderPrivateKey, provider);
-            const amount = ethers.parseEther("5");
+            const amount = ethers.parseEther("2");
             
             const tx = await senderWallet.sendTransaction({
                 to: address,

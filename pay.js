@@ -23,7 +23,7 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 
 function Pay(props) {
-  const ganacheUrl = 'HTTP://192.168.29.107:7545'; // home
+  const ganacheUrl = 'http://192.168.29.107:7545'; // home
   const provider = new ethers.JsonRpcProvider(ganacheUrl, {
     name: 'ganache',
     chainId: 1337,
@@ -307,7 +307,9 @@ function Pay(props) {
 
         {/* Transaction History */}
         <Text style={styles.historyHeader}>Recent Transactions</Text>
-        <ScrollView style={styles.historyContainer}>
+        <ScrollView style={styles.historyContainer}
+         showsVerticalScrollIndicator={false}>  
+          {/* showsHorizontalScrollIndicator={false} */}
           {transactions.map((tx, index) => (
             <Animated.View
               key={index}

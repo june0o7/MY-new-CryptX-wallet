@@ -33,7 +33,8 @@ import { ethers } from "ethers";
 // import CryptoNews from "./CryptoNews";
 import CryptoNews from "./CryptoNews";
 import CryptoPriceTracker from "./CryptoPriceTracker";
-import axios from "axios";
+// import axios from "axios";
+// import { Axios } from "axios";
 
 const auth = getAuth(app);
 const db = getFirestore(app);
@@ -48,65 +49,38 @@ function Home({ navigation }) {
   const [cryptoNews, setCryptoNews] = useState([]);
   const [portfolioData, setPortfolioData] = useState({});
 
+
+  //.................................
+
+  const [news, setNews] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch news from CryptoPanic API
+  const fetchNews = async () => {
+    try {
+      const response = await fetch(
+        'https://cryptopanic.com/api/v1/posts/?auth_token=0b506b16c9ef6df9a91aeb3a21f676ec5fa39ec6&public=true'
+      );
+      const data = await response.json(); // Parse the JSON response
+      setNews(data.results); // Set the fetched news data
+    } catch (error) {
+      console.error('Error fetching news:', error);
+      Alert.alert('Error', 'Failed to fetch news.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  //.................................
+
   const provider = new ethers.JsonRpcProvider("http://192.168.29.107:7545", {
     name: "ganache",
     chainId: 1337,
   });
 
 
-  const fetchCryptoPrices = async () => {
-    try {
-      const response = await axios.get(
-        "https://api.coincap.io/v2/assets?limit=10"
-      );
-      return response.data.data.map((crypto) => ({
-        name: crypto.name,
-        symbol: crypto.symbol,
-        priceUsd: parseFloat(crypto.priceUsd).toFixed(2), // Use priceUsd instead of current_price
-        image: `https://assets.coincap.io/assets/icons/${crypto.symbol.toLowerCase()}@2x.png`,
-      }));
-    } catch (error) {
-      console.error("Error fetching crypto prices:", error);
-      return [];
-    }
-  };
+ 
   
-
-  const fetchCryptoNews = async () => {
-    try {
-      const response = await axios.get(
-        "https://cryptopanic.com/api/v1/posts/?auth_token=0b506b16c9ef6df9a91aeb3a21f676ec5fa39ec6&public=true"
-      );
-      return response.data.results;
-    } catch (error) {
-      console.error("Error fetching crypto news:", error);
-      return [];
-    }
-  };
-
-  const fetchPortfolioPerformance = async () => {
-    try {
-      const response = await axios.get(
-        "https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=ETH&apikey=YFDW04QSAAVDHGQY"
-      );
-      return response.data["Time Series (Daily)"];
-    } catch (error) {
-      console.error("Error fetching portfolio performance:", error);
-      return {};
-    }
-  };
-  const fetchAllData = async () => {
-    setRefreshing(true);
-    await fetchData();
-    const prices = await fetchCryptoPrices();
-    const news = await fetchCryptoNews();
-    const portfolio = await fetchPortfolioPerformance();
-
-    setCryptoPrices(prices);
-    setCryptoNews(news);
-    setPortfolioData(portfolio);
-    setRefreshing(false);
-  };
 
   const fetchData = async () => {
     try {
@@ -252,30 +226,9 @@ function Home({ navigation }) {
             </TouchableOpacity>
           </View>
 
-          {/* New: Portfolio Performance Chart */}
-          {/* <Text style={styles.sectionHeader}>Portfolio Performance</Text>
-          <View style={styles.chartPlaceholder}>
-            <Text style={styles.chartPlaceholderText}>Chart Placeholder</Text>
-          </View> */}
-             
-          {/* new section    */}
          
          
-          {/* <Text style={styles.sectionHeader}>Top Cryptos</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-  {cryptoPrices.map((crypto, index) => (
-    <View key={index} style={styles.cryptoCard}>
-      <Image
-        source={{ uri: crypto.image }}
-        onError={() => (crypto.image = "https://via.placeholder.com/50")}
-        style={styles.cryptoImage}
-      />
-      <Text style={styles.cryptoName}>{crypto.name}</Text>
-      <Text style={styles.cryptoPrice}>${crypto.priceUsd}</Text> 
-    </View>
-  ))}
-    </ScrollView> */}
-
+        
 
         
 
@@ -311,12 +264,18 @@ function Home({ navigation }) {
           </View>
 
           {/* New: News Section */}
-          <Text style={styles.sectionHeader}>Latest News</Text>
-          <View style={styles.newsContainer}>
-            <Text style={styles.newsItem}>Bitcoin hits all-time high!</Text>
-            <Text style={styles.newsItem}>Ethereum 2.0 launching soon.</Text>
-            <Text style={styles.newsItem}>New altcoin gaining traction.</Text>
+          {/* <Text style={styles.sectionHeader}>Latest News</Text> */}
+          <View>
+      <Text style={styles.sectionHeader}>Latest News</Text>
+      <View style={styles.newsContainer}>
+        {news.map((item, index) => (
+          <View key={index} style={styles.newsItem}>
+            <Text style={styles.newsTitle}>{item.title}</Text>
+            <Text style={styles.newsSource}>{item.source.name}</Text>
           </View>
+        ))}
+      </View>
+    </View>
 
           {/* Existing Businesses Section */}
           <Text style={styles.sectionHeader}>Businesses</Text>
@@ -510,6 +469,11 @@ const styles = StyleSheet.create({
     fontSize: 25,
     marginTop: 5,
   },
+  newsTitle: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
   marketGrowthContainer: {
     backgroundColor: "#00FFEA",
     borderRadius: 10,
@@ -535,6 +499,25 @@ const styles = StyleSheet.create({
     width: 30,
     height: 30,
     tintColor: "#00FFEA",
+  },
+  newsContainer: {
+    backgroundColor: '#1A1A2E',
+    borderRadius: 10,
+    padding: 15,
+    marginBottom: 20,
+  },
+  newsItem: {
+    marginBottom: 10,
+  },
+  newsSource: {
+    color: '#6C6C6C',
+    fontSize: 14,
+  },
+  sectionHeader: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#00FFEA',
+    marginBottom: 10,
   },
   iconText: {
     color: "#00FFEA",

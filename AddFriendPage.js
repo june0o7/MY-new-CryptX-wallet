@@ -135,6 +135,13 @@ function AddFriendPage({ navigation }) {
         >
           <Text style={styles.buttonText}>Save Friend</Text>
         </TouchableOpacity>
+
+        <TouchableOpacity
+              style={styles.addContactButton}
+              onPress={() => navigation.navigate('Pay To Contact')}
+            >
+              <Text style={styles.addContactText}> Friends </Text>
+            </TouchableOpacity>
       </View>
 
       {/* Confirmation Modal */}
@@ -256,6 +263,18 @@ const styles = StyleSheet.create({
     color: "#0A0A0A",
     fontSize: 16,
     fontWeight: "bold",
+  },
+  addContactButton: {
+    backgroundColor: '#00FFEA',
+    padding: 12,
+    borderRadius: 10,
+    margin: 10,
+    alignItems: 'center',
+  },
+  addContactText: {
+    color: '#0A0A0A',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
 
