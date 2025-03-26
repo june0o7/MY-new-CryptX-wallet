@@ -1,10 +1,15 @@
-import { useEffect } from "react";
-import { createDrawerNavigator } from "@react-navigation/drawer";
-import { Image, TouchableOpacity, StyleSheet, Alert } from "react-native";
+import { useState, useEffect } from "react";
+import { LinearGradient } from "expo-linear-gradient";
+
+import { createDrawerNavigator, DrawerContentScrollView, DrawerItemList } from "@react-navigation/drawer";
+import { Image, TouchableOpacity, StyleSheet, Alert, View, Text, Animated, Easing } from "react-native";
 import { getAuth, signOut } from "firebase/auth";
+import { Ionicons, MaterialIcons, FontAwesome, AntDesign } from '@expo/vector-icons';
+import * as Animatable from 'react-native-animatable';
 import Home from "./Home";
 import ID from "./ID";
 import Wallet from "./Wallet";
+import design from "./design";
 import Set from "./Set";
 import Ab from "./Ab";
 import Pay from "./pay";
@@ -16,15 +21,100 @@ import CryptoNews from "./CryptoNews";
 import CryptoPriceTracker from "./CryptoPriceTracker";
 import AddFriendPage from "./AddFriendPage";
 
+const CustomDrawerContent = (props) => {
+  const [scaleValue] = useState(new Animated.Value(1));
+  const [rotateValue] = useState(new Animated.Value(0));
+
+  useEffect(() => {
+    Animated.sequence([
+      Animated.timing(scaleValue, {
+        toValue: 1.05,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.spring(scaleValue, {
+        toValue: 1,
+        friction: 5,
+        useNativeDriver: true,
+      })
+    ]).start();
+  }, []);
+
+  const handleLogoutPress = () => {
+    Animated.sequence([
+      Animated.timing(rotateValue, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+      Animated.timing(rotateValue, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      })
+    ]).start(() => {
+      props.handleLogout();
+    });
+  };
+
+  const rotation = rotateValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '15deg']
+  });
+
+  return (
+    <LinearGradient colors={["#0F0F2D", "#1A1A2E"]} style={{ flex: 1 }}>
+      <DrawerContentScrollView {...props}>
+        <Animatable.View 
+          animation="fadeInDown"
+          duration={800}
+          style={styles.drawerHeader}
+        >
+          <Image
+            source={require("./assets/icons/pp.jpg")}
+            style={styles.profileImage}
+          />
+          <Text style={styles.headerTitle}>Crypto Wallet</Text>
+          <Text style={styles.headerSubtitle}>Premium Account</Text>
+        </Animatable.View>
+
+        <View style={styles.drawerSection}>
+          <DrawerItemList 
+            {...props} 
+            activeTintColor="#00FFEA"
+            inactiveTintColor="#6C6C6C"
+            labelStyle={styles.drawerLabel}
+          />
+        </View>
+      </DrawerContentScrollView>
+
+      <Animated.View 
+        style={[
+          styles.logoutContainer,
+          { transform: [{ scale: scaleValue }, { rotate: rotation }] }
+        ]}
+      >
+        <TouchableOpacity 
+          style={styles.logoutButton}
+          onPress={handleLogoutPress}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="log-out" size={24} color="#FF5252" />
+          <Text style={styles.logoutText}>Logout</Text>
+        </TouchableOpacity>
+      </Animated.View>
+    </LinearGradient>
+  );
+};
+
 function Main({ navigation }) {
   const Drawer = createDrawerNavigator();
   const auth = getAuth();
 
-  // Logout function
   const handleLogout = async () => {
     try {
       await signOut(auth);
-      navigation.navigate("Login"); // Navigate to Login screen
+      navigation.navigate("Login");
       Alert.alert("Success", "Logged out successfully");
     } catch (error) {
       console.error("Logout error:", error);
@@ -32,212 +122,170 @@ function Main({ navigation }) {
     }
   };
 
-  const handleprofile = async () => {
-    try {
-      // await signOut(auth);
-      navigation.navigate("ID"); // Navigate to Login screen
-      // Alert.alert("Success", "Logged out successfully");
-    } catch (error) {
-      console.error("Logout error:", error);
-      Alert.alert("Error", "Failed to logout");
-    }
+  const getIconComponent = (iconName, iconType = 'Ionicons', color = "#00FFEA") => {
+    const IconComponent = {
+      Ionicons,
+      MaterialIcons,
+      FontAwesome,
+      AntDesign
+    }[iconType];
+    
+    return ({ focused }) => (
+      <IconComponent 
+        name={iconName} 
+        size={22} 
+        color={focused ? "#00FFEA" : "#6C6C6C"} 
+      />
+    );
   };
 
   return (
     <Drawer.Navigator
       initialRouteName="Home"
-      screenOptions={({ navigation }) => ({
+      drawerContent={(props) => <CustomDrawerContent {...props} handleLogout={handleLogout} />}
+      screenOptions={{
         drawerStyle: {
-          backgroundColor: "#1A1A2E", // Dark background for the drawer
+          width: 280,
         },
-        drawerActiveTintColor: "#00FFEA", // Neon blue for active item text
-        drawerInactiveTintColor: "#6C6C6C", // Gray for inactive item text
-        drawerActiveBackgroundColor: "#16213E", // Dark blue for active item background
+        drawerActiveTintColor: "#00FFEA",
+        drawerInactiveTintColor: "#6C6C6C",
+        drawerActiveBackgroundColor: "rgba(0, 255, 234, 0.1)",
         drawerItemStyle: {
-          borderRadius: 10, // Rounded corners for drawer items
+          borderRadius: 10,
+          marginHorizontal: 10,
+          marginVertical: 4,
         },
         headerStyle: {
-          backgroundColor: "#0A0A0A", // Dark background for the header
+          backgroundColor: "#0A0A0A",
           shadowColor: "#00FFEA",
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.3,
           shadowRadius: 10,
+          elevation: 10,
         },
-        headerTintColor: "#00FFEA", // Neon text for the header
+        headerTitleStyle: {
+          color: "#00FFEA",
+          fontWeight: 'bold',
+          fontSize: 20,
+        },
+        headerTintColor: "#00FFEA",
         headerRight: () => (
           <TouchableOpacity
-            style={styles.iconContainer}
+            style={styles.headerButton}
             onPress={() => navigation.navigate("Profile")}
           >
             <Image
-              source={require("./assets/icons/profile.png")}
-              style={{height:35,width:35,shadowColor:"#00FFEA" }}
+              source={require("./assets/icons/pp.jpg")}
+              style={styles.headerProfileImage}
             />
           </TouchableOpacity>
         ),
-      })}
+      }}
     >
-
       <Drawer.Screen
         name="Home"
         component={Home}
         options={{
-          drawerIcon: () => (
-            <Image
-            source={require("./assets/icons/home.png")}
-            style={{ height: 20, width: 20, tintColor: "#00FFEA" }}
-            />
-          ),
+          drawerIcon: getIconComponent('home'),
+          headerTitle: "Dashboard"
         }}
       />
       <Drawer.Screen
         name="Pay"
         component={Pay}
         options={{
-          drawerIcon: () => (
-            <Image
-            source={require("./assets/icons/cash-payment-icon-5.png")}
-            style={{ height: 23, width: 23, tintColor: "#00FFEA" }}
-            />
-          ),
+          drawerIcon: getIconComponent('send', 'Ionicons'),
+
+          headerTitle: "Send Payment"
         }}
       />
       <Drawer.Screen
         name="Pay To Contact"
         component={PayToContact}
         options={{
-          drawerIcon: () => (
-            <Image
-            source={require("./assets/icons/paytocontact.png")}
-            style={{ height: 20, width: 20, tintColor: "#00FFEA" }}
-            />
-          ),
+          drawerIcon: getIconComponent('account-box', 'MaterialIcons'),
+          headerTitle: "Pay Contacts"
         }}
       />
       <Drawer.Screen
         name="Add To Contact"
         component={AddFriendPage}
         options={{
-          drawerIcon: () => (
-            <Image
-            source={require("./assets/icons/paytocontact.png")}
-            style={{ height: 20, width: 20, tintColor: "#00FFEA" }}
-            />
-          ),
+          drawerIcon: getIconComponent('user-plus', 'FontAwesome'),
+          headerTitle: "Add Contact"
         }}
       />
-        {/* Screens */}<Drawer.Screen name="sendcrypto" component={sendCrypto} options={{
+      <Drawer.Screen 
+        name="sendcrypto" 
+        component={sendCrypto} 
+        options={{
           drawerItemStyle: { display: 'none' },
-          // headerStyle: { backgroundColor: '#1A1A2E' },
-          // headerTintColor: '#00FFEA',
-          drawerIcon: () => (
-            <Image
-            source={require("./assets/icons/uparrow.png")}
-            style={{ height: 20, width: 20, tintColor: "#00FFEA" }}
-            />
-          ),
-        }}/>
+          headerTitle: "Send Crypto"
+        }}
+      />
       <Drawer.Screen
         name="Wallet"
         component={Wallet}
         options={{
-          drawerIcon: () => (
-            <Image
-              source={require("./assets/icons/wallet.png")}
-              style={{ height: 20, width: 20, tintColor: "#00FFEA" }}
-            />
-          ),
+          drawerIcon: getIconComponent('wallet'),
+          headerTitle: "My Wallet"
         }}
       />
-       <Drawer.Screen
+      <Drawer.Screen
         name="Transaction History"
         component={TransactionHistory}
         options={{
-          drawerIcon: () => (
-            <Image
-              source={require("./assets/icons/bill.png")}
-              style={{ height: 25, width: 21, tintColor: "#00FFEA" }}
-            />
-          ),
+          drawerIcon: getIconComponent('history', 'FontAwesome'),
+          headerTitle: "Transactions"
         }}
       />
       <Drawer.Screen
         name="News"
         component={CryptoNews}
         options={{
-          drawerIcon: () => (
-            <Image
-              source={require("./assets/icons/globe.png")}
-              style={{ height: 20, width: 20, tintColor: "#00FFEA" }}
-            />
-          ),
+          drawerIcon: getIconComponent('newspaper'),
+          headerTitle: "Crypto News"
         }}
       />
       <Drawer.Screen
         name="Crypto Price"
         component={CryptoPriceTracker}
         options={{
-          drawerIcon: () => (
-            <Image
-              source={require("./assets/icons/cryptocurrency.png")}
-              style={{ height: 20, width: 20, tintColor: "#00FFEA" }}
-            />
-          ),
+          drawerIcon: getIconComponent('line-chart', 'FontAwesome'),
+          headerTitle: "Market Data"
         }}
       />
       <Drawer.Screen
         name="Profile"
         component={ID}
         options={{
-          drawerIcon: () => (
-            <Image
-              source={require("./assets/icons/user.png")}
-              style={{ height: 20, width: 20, tintColor: "#00FFEA" }}
-            />
-          ),
+          drawerIcon: getIconComponent('user-circle', 'FontAwesome')
+,
+          headerTitle: "My Profile"
         }}
       />
       <Drawer.Screen
         name="Setting"
         component={Set}
         options={{
-          drawerIcon: () => (
-            <Image
-              source={require("./assets/icons/settings.png")}
-              style={{ height: 20, width: 20, tintColor: "#00FFEA" }}
-            />
-          ),
+          drawerIcon: getIconComponent('settings'),
+          headerTitle: "Settings"
         }}
       />
       <Drawer.Screen
         name="About"
         component={Ab}
         options={{
-          drawerIcon: () => (
-            <Image
-              source={require("./assets/icons/about.png")}
-              style={{ height: 20, width: 20, tintColor: "#00FFEA" }}
-            />
-          ),
+          drawerIcon: getIconComponent('info-circle', 'FontAwesome'),
+          headerTitle: "About App"
         }}
       />
-      {/* Logout Button */}
       <Drawer.Screen
-        name="Logout"
-        component={Login} // This is just a placeholder
+        name="design"
+        component={design}
         options={{
-          drawerIcon: () => (
-            <Image
-              source={require("./assets/icons/log.png")}
-              style={{ height: 20, width: 20, tintColor: "#FF5733" }} // Red tint for logout
-            />
-          ),
-          drawerLabel: "Logout",
-          drawerLabelStyle: { color: "#FF5733" }, // Red color for logout text
-        }}
-        listeners={{
-          drawerItemPress: () => {
-            handleLogout();
-            return false; // Prevent default navigation
-          },
+          drawerIcon: getIconComponent('palette', 'MaterialIcons'),
+          headerTitle: "Design System"
         }}
       />
     </Drawer.Navigator>
@@ -245,18 +293,71 @@ function Main({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  iconContainer: {
-    marginRight: 15,
-    padding: 8,
-    borderRadius: 20,
-    backgroundColor: "#1A1A2E",
-    borderWidth: 0,
-    borderColor: "#00FFEA",
+  drawerHeader: {
+    padding: 20,
+    paddingBottom: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0, 255, 234, 0.1)',
+    alignItems: 'center',
   },
-  iconImage: {
-    width: 35,
-    height: 35,
-    borderRadius: 17.5,
+  profileImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    borderWidth: 2,
+    borderColor: '#00FFEA',
+    marginBottom: 10,
+  },
+  headerTitle: {
+    color: '#00FFEA',
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  headerSubtitle: {
+    color: '#6C6C6C',
+    fontSize: 14,
+  },
+  drawerSection: {
+    marginTop: 10,
+    paddingHorizontal: 10,
+  },
+  drawerLabel: {
+    fontSize: 15,
+    fontWeight: '500',
+    marginLeft: -15,
+  },
+  logoutContainer: {
+    marginBottom: 20,
+    marginHorizontal: 20,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0, 255, 234, 0.1)',
+    paddingTop: 15,
+  },
+  logoutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255, 82, 82, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 82, 82, 0.3)',
+  },
+  logoutText: {
+    color: '#FF5252',
+    fontSize: 15,
+    fontWeight: 'bold',
+    marginLeft: 10,
+  },
+  headerButton: {
+    marginRight: 15,
+  },
+  headerProfileImage: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: '#00FFEA',
   },
 });
 

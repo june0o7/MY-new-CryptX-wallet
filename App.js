@@ -6,7 +6,7 @@ import { createNavigatorFactory, NavigationContainer} from '@react-navigation/na
 import { createStackNavigator } from '@react-navigation/stack';
 import SignUp from './SignUp';
 import Home from './Home';
-
+import design from './design';
 // import MyComponent from './MyComponent';
 import Main from './main';
 // import Tudung from './tudung';
@@ -48,6 +48,7 @@ export default function App() {
       <stack.Screen name="CryptoPriceTracker" component={CryptoPriceTracker} options={{headerShown:true}}/>
       <stack.Screen name="AddFriendPage" component={AddFriendPage} options={{headerShown:true}} />
       <stack.Screen name="Notifications" component={Notifications} />
+      <stack.Screen name="design" component={design} options={{headerShown:true}}/>
                 <stack.Screen name="PrivacyAndSecurity" component={PrivacyAndSecurity} />
                 <stack.Screen name="HelpAndFeedback" component={HelpAndFeedback} />
       </stack.Navigator>

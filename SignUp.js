@@ -14,6 +14,7 @@ function SignUp(props) {
     const [address, setAddress] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [pin, setPin] = useState('');
     const [username, setUsername] = useState('');
     const [phNo, setphNo] = useState('');
     const [loading, setLoading]= useState(false);//loading 
@@ -45,6 +46,17 @@ function SignUp(props) {
                     placeholder="Password"
                     value={password}
                     onChangeText={setPassword}
+                    secureTextEntry={true}
+                    placeholderTextColor="#6C6C6C"
+                    style={styles.input}
+                />
+
+                <TextInput
+                    placeholder="PIN (4 digits)"
+                    value={pin}
+                    onChangeText={setPin}
+                    keyboardType="numeric"
+                    maxLength={4}
                     secureTextEntry={true}
                     placeholderTextColor="#6C6C6C"
                     style={styles.input}
@@ -96,6 +108,7 @@ function SignUp(props) {
                                     name: username,
                                     email: email,
                                     password: password,
+                                    pin: pin,
                                     phone: phNo,
                                     address: address,
                                     DOB: DOB,

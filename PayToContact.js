@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   StyleSheet,
   Text,
@@ -10,74 +10,78 @@ import {
   Alert,
   TextInput,
   RefreshControl,
+  Modal,
+  Animated,
+  Dimensions
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { FontAwesome, Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { collection, getDoc, getFirestore, query, where, doc, getDocs, updateDoc } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import app from './firebaseConfig';
-import Icon from 'react-native-vector-icons/FontAwesome'; // For the delete icon
+import * as Animatable from 'react-native-animatable';
 
+const { width } = Dimensions.get('window');
 const db = getFirestore(app);
 const auth = getAuth(app);
 
 function PayToContact({ navigation }) {
-  const [friends, setFriends] = useState([]); // All friends
-  const [filteredFriends, setFilteredFriends] = useState([]); // Filtered friends based on search
+  const [friends, setFriends] = useState([]);
+  const [filteredFriends, setFilteredFriends] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [searchQuery, setSearchQuery] = useState(''); // Search query
-  const [showModal, setShowModal] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedFriend, setSelectedFriend] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [scaleValue] = useState(new Animated.Value(1));
 
-  // Fetch the current user's friends
   const fetchFriends = async () => {
     try {
       const currentUser = auth.currentUser;
       if (!currentUser) {
-        Alert.alert('Error', 'User not authenticated.');
+        Alert.alert('Authentication Required', 'Please sign in to view contacts');
         return;
       }
 
-      // Get the current user's document
       const userDocRef = doc(db, 'users', currentUser.uid);
       const userDocSnap = await getDoc(userDocRef);
 
       if (userDocSnap.exists()) {
         const userData = userDocSnap.data();
-        const friendsPhones = userData.friends || []; // Get the friends' phone numbers
+        const friendsPhones = userData.friends || [];
 
-        // Fetch details of each friend using their phone number
-        const friendsData = [];
-        for (const phone of friendsPhones) {
+        const friendsPromises = friendsPhones.map(async (phone) => {
           const usersCollection = collection(db, 'users');
           const q = query(usersCollection, where('phone', '==', phone));
           const querySnapshot = await getDocs(q);
 
           if (!querySnapshot.empty) {
             const friendData = querySnapshot.docs[0].data();
-            friendsData.push({
-              id: querySnapshot.docs[0].id, // Friend's user ID
+            return {
+              id: querySnapshot.docs[0].id,
               name: friendData.name,
               phone: friendData.phone,
-              walletAddress: friendData.walletaddress, // Add wallet address
-            });
+              walletAddress: friendData.walletaddress,
+              avatar: friendData.photoURL || null
+            };
           }
-        }
+          return null;
+        });
 
+        const friendsData = (await Promise.all(friendsPromises)).filter(Boolean);
         setFriends(friendsData);
-        setFilteredFriends(friendsData); // Initialize filtered friends
-      } else {
-        Alert.alert('Error', 'User data not found.');
+        setFilteredFriends(friendsData);
       }
     } catch (error) {
       console.error('Error fetching friends:', error);
-      Alert.alert('Error', 'Failed to fetch friends.');
+      Alert.alert('Error', 'Failed to load contacts. Please try again.');
     } finally {
       setLoading(false);
-      setRefreshing(false); // Stop refreshing
+      setRefreshing(false);
     }
   };
 
-  // Handle search
   const handleSearch = (query) => {
     setSearchQuery(query);
     const filtered = friends.filter(
@@ -88,49 +92,63 @@ function PayToContact({ navigation }) {
     setFilteredFriends(filtered);
   };
 
-  // Pull-to-refresh handler
   const onRefresh = () => {
     setRefreshing(true);
-    fetchFriends(); // Reload friends
+    fetchFriends();
   };
 
-  // Delete a friend
-  const deleteFriend = async (phone) => {
-    try {
-      setLoading(true);
-      const currentUser = auth.currentUser;
-      if (!currentUser) {
-        Alert.alert('Error', 'User not authenticated.');
-        setLoading(false)
-        return;
-      }
+  const confirmDelete = (friend) => {
+    setSelectedFriend(friend);
+    setShowDeleteModal(true);
+  };
 
-      // Get the current user's document
+  const animateDelete = () => {
+    Animated.sequence([
+      Animated.timing(scaleValue, {
+        toValue: 1.1,
+        duration: 100,
+        useNativeDriver: true
+      }),
+      Animated.spring(scaleValue, {
+        toValue: 1,
+        friction: 3,
+        useNativeDriver: true
+      })
+    ]).start();
+  };
+
+  const deleteFriend = async () => {
+    if (!selectedFriend) return;
+    
+    try {
+      setDeleteLoading(true);
+      animateDelete();
+      
+      const currentUser = auth.currentUser;
       const userDocRef = doc(db, 'users', currentUser.uid);
       const userDocSnap = await getDoc(userDocRef);
 
       if (userDocSnap.exists()) {
-        setLoading(true);
         const userData = userDocSnap.data();
-        const updatedFriends = userData.friends.filter((friendPhone) => friendPhone !== phone);
+        const updatedFriends = userData.friends.filter(
+          (friendPhone) => friendPhone !== selectedFriend.phone
+        );
 
-        // Update the friends array in Firestore
-        await updateDoc(userDocRef, {
-          friends: updatedFriends,
-        });
-
-        // Refresh the list
-        fetchFriends();
-        setLoading(false);
-        Alert.alert('Success', 'Friend deleted successfully!');
-      } else {
-        Alert.alert('Error', 'User data not found.');
-        setLoading(false);
+        await updateDoc(userDocRef, { friends: updatedFriends });
+        
+        // Update local state
+        setFriends(friends.filter(f => f.phone !== selectedFriend.phone));
+        setFilteredFriends(filteredFriends.filter(f => f.phone !== selectedFriend.phone));
+        
+        Alert.alert('Success', `${selectedFriend.name} removed from contacts`);
       }
     } catch (error) {
       console.error('Error deleting friend:', error);
-      Alert.alert('Error', 'Failed to delete friend.');
-      setLoading(false);
+      Alert.alert('Error', 'Failed to remove contact');
+    } finally {
+      setDeleteLoading(false);
+      setShowDeleteModal(false);
+      setSelectedFriend(null);
     }
   };
 
@@ -140,67 +158,142 @@ function PayToContact({ navigation }) {
 
   if (loading) {
     return (
-      <LinearGradient colors={['#0A0A0A', '#1A1A2E', '#16213E']} style={styles.container}>
-        <ActivityIndicator color="#00FFEA" size="large" />
+      <LinearGradient colors={['#0F0F2D', '#1A1A2E']} style={styles.container}>
+        <ActivityIndicator size="large" color="#00FFEA" />
+        <Text style={styles.loadingText}>Loading Contacts...</Text>
       </LinearGradient>
     );
   }
 
   return (
-    <LinearGradient colors={['#0A0A0A', '#1A1A2E', '#16213E']} style={styles.container}>
-
-<TouchableOpacity
-      style={styles.addContactButton}
-      onPress={() => navigation.navigate('Add To Contact')}
-    >
-      <Text style={styles.addContactText}>Add Friend</Text>
-    </TouchableOpacity>
-
-      {/* Search Bar */}
-      <TextInput
-        style={styles.searchBar}
-        placeholder="Search by name or phone..."
-        placeholderTextColor="#6C6C6C"
-        value={searchQuery}
-        onChangeText={handleSearch}
-      />
-      <View>
-      {
-                    loading && (<ActivityIndicator size="large" color="#00FFEA" />)
-                }
+    <LinearGradient colors={['#0F0F2D', '#1A1A2E']} style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.title}>My Contacts</Text>
+        <Text style={styles.subtitle}>
+          {filteredFriends.length} {filteredFriends.length === 1 ? 'contact' : 'contacts'}
+        </Text>
       </View>
-      {/* Friends List */}
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
+
+      <View style={styles.searchContainer}>
+        <Ionicons name="search" size={20} color="#6C6C6C" style={styles.searchIcon} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search contacts..."
+          placeholderTextColor="#6C6C6C"
+          value={searchQuery}
+          onChangeText={handleSearch}
+          clearButtonMode="while-editing"
+        />
+      </View>
+
+      <TouchableOpacity
+        style={styles.addButton}
+        onPress={() => navigation.navigate('Add To Contact')}
       >
-        {filteredFriends.map((friend) => (
-          <View key={friend.id} style={styles.contactContainer}>
-            <TouchableOpacity
-              style={styles.contacts}
-              onPress={() => navigation.navigate('sendcrypto', { user: friend })}
+        <Ionicons name="person-add" size={20} color="#0A0A0A" />
+        <Text style={styles.addButtonText}>Add New Contact</Text>
+      </TouchableOpacity>
+
+      {filteredFriends.length === 0 ? (
+        <View style={styles.emptyState}>
+          <MaterialIcons name="people-outline" size={60} color="#4A4A6A" />
+          <Text style={styles.emptyText}>No contacts found</Text>
+          <Text style={styles.emptySubtext}>
+            {searchQuery ? 'Try a different search' : 'Add your first contact'}
+          </Text>
+        </View>
+      ) : (
+        <ScrollView
+          contentContainerStyle={styles.listContainer}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor="#00FFEA"
+            />
+          }
+        >
+          {filteredFriends.map((friend) => (
+            <Animatable.View 
+              key={friend.id}
+              animation="fadeInRight"
+              duration={500}
+              style={styles.contactCard}
             >
-              <Image
-                source={require('./assets/icons/boy.png')}
-                style={styles.contactImage}
-              />
-              <View style={styles.contactInnerBox}>
-                <Text style={styles.contactName}>{friend.name}</Text>
-                <Text style={styles.contactHint}>{friend.phone}</Text>
-              </View>
-            </TouchableOpacity>
-            {/* Delete Icon */}
-            <TouchableOpacity
-              style={styles.deleteButton}
-              onPress={() => deleteFriend(friend.phone)}
-            >
-              <Icon name="trash" size={20} color="#FF5733" />
-            </TouchableOpacity>
-          </View>
-        ))}
-      </ScrollView>
+              <TouchableOpacity
+                style={styles.contactContent}
+                onPress={() => navigation.navigate('sendcrypto', { user: friend })}
+              >
+                {friend.avatar ? (
+                  <Image source={{ uri: friend.avatar }} style={styles.avatar} />
+                ) : (
+                  <View style={styles.avatarPlaceholder}>
+                    <FontAwesome name="user" size={24} color="#00FFEA" />
+                  </View>
+                )}
+                <View style={styles.contactInfo}>
+                  <Text style={styles.contactName} numberOfLines={1}>
+                    {friend.name}
+                  </Text>
+                  <Text style={styles.contactPhone}>{friend.phone}</Text>
+                </View>
+              </TouchableOpacity>
+              
+              <Animated.View style={{ transform: [{ scale: scaleValue }] }}>
+                <TouchableOpacity
+                  style={styles.deleteButton}
+                  onPress={() => confirmDelete(friend)}
+                >
+                  <FontAwesome name="trash-o" size={20} color="#FF5252" />
+                </TouchableOpacity>
+              </Animated.View>
+            </Animatable.View>
+          ))}
+        </ScrollView>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        visible={showDeleteModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowDeleteModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <Animatable.View 
+            animation="fadeInUp"
+            duration={300}
+            style={styles.modalContainer}
+          >
+            <Text style={styles.modalTitle}>Remove Contact</Text>
+            <Text style={styles.modalText}>
+              Are you sure you want to remove {selectedFriend?.name} from your contacts?
+            </Text>
+            
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.cancelButton]}
+                onPress={() => setShowDeleteModal(false)}
+                disabled={deleteLoading}
+              >
+                <Text style={styles.modalButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={[styles.modalButton, styles.deleteConfirmButton]}
+                onPress={deleteFriend}
+                disabled={deleteLoading}
+              >
+                {deleteLoading ? (
+                  <ActivityIndicator color="#FFFFFF" size="small" />
+                ) : (
+                  <Text style={styles.modalButtonText}>Remove</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </Animatable.View>
+        </View>
+      </Modal>
     </LinearGradient>
   );
 }
@@ -209,101 +302,180 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  searchBar: {
-    backgroundColor: '#1A1A2E',
-    borderRadius: 10,
-    padding: 10,
-    margin: 10,
-    color: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#00FFEA',
+  header: {
+    paddingHorizontal: 24,
+    paddingTop: 24,
+    paddingBottom: 16,
   },
-  contactContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    width: '95%',
-    marginVertical: 8,
-    marginHorizontal: 10,
-  },
-  contacts: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#1A1A2E',
-    borderRadius: 15,
-    padding: 15,
-    borderWidth: 1,
-    borderColor: '#00FFEA',
-    flex: 1,
-  },
-  contactImage: {
-    height: 50,
-    width: 50,
-    borderRadius: 25, // Circular image
-  },
-  contactInnerBox: {
-    marginLeft: 15,
-    justifyContent: 'center',
-  },
-  contactName: {
-    color: '#00FFEA', // Neon blue text
-    fontSize: 16,
+  title: {
+    fontSize: 28,
     fontWeight: 'bold',
+    color: '#00FFEA',
+    marginBottom: 4,
   },
-  contactHint: {
-    color: '#6C6C6C', // Gray text for hint
+  subtitle: {
     fontSize: 14,
+    color: '#6C6C6C',
   },
-  deleteButton: {
-    marginLeft: 10,
-    padding: 10,
-  },
-  addContactButton: {
-    backgroundColor: '#00FFEA',
-    padding: 12,
-    borderRadius: 10,
-    margin: 10,
+  searchContainer: {
+    flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: '#1A1A2E',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    marginHorizontal: 24,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#2D2D42',
   },
-  addContactText: {
+  searchIcon: {
+    marginRight: 12,
+  },
+  searchInput: {
+    flex: 1,
+    height: 48,
+    color: '#FFFFFF',
+    fontSize: 16,
+  },
+  addButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#00FFEA',
+    borderRadius: 12,
+    padding: 14,
+    marginHorizontal: 24,
+    marginBottom: 24,
+  },
+  addButtonText: {
     color: '#0A0A0A',
     fontSize: 16,
     fontWeight: 'bold',
+    marginLeft: 10,
   },
-
-  modalContainer: {
+  emptyState: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingBottom: 100,
   },
-  modalContent: {
-    backgroundColor: "#1A1A2E",
-    padding: 20,
-    borderRadius: 10,
-    width: "80%",
+  emptyText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '600',
+    marginTop: 16,
+  },
+  emptySubtext: {
+    color: '#6C6C6C',
+    fontSize: 14,
+    marginTop: 8,
+  },
+  listContainer: {
+    paddingHorizontal: 24,
+    paddingBottom: 24,
+  },
+  contactCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#1A1A2E',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 234, 0.1)',
+  },
+  contactContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  avatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+  },
+  avatarPlaceholder: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(0, 255, 234, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  contactInfo: {
+    flex: 1,
+    marginLeft: 16,
+  },
+  contactName: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  contactPhone: {
+    color: '#6C6C6C',
+    fontSize: 14,
+  },
+  deleteButton: {
+    padding: 8,
+    marginLeft: 8,
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+  },
+  modalContainer: {
+    width: width * 0.85,
+    backgroundColor: '#1A1A2E',
+    borderRadius: 16,
+    padding: 24,
+    borderWidth: 1,
+    borderColor: '#FF5252',
+  },
+  modalTitle: {
+    color: '#FF5252',
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 8,
+    textAlign: 'center',
   },
   modalText: {
-    color: "#FFFFFF",
+    color: '#FFFFFF',
     fontSize: 16,
-    marginBottom: 20,
-    textAlign: "center",
+    marginBottom: 24,
+    textAlign: 'center',
   },
   modalButtons: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
   },
   modalButton: {
-    backgroundColor: "#00FFEA",
-    padding: 10,
-    borderRadius: 5,
-    width: "45%",
-    alignItems: "center",
+    flex: 1,
+    borderRadius: 10,
+    height: 48,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cancelButton: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: '#6C6C6C',
+    marginRight: 10,
+  },
+  deleteConfirmButton: {
+    backgroundColor: '#FF5252',
+    marginLeft: 10,
   },
   modalButtonText: {
-    color: "#0A0A0A",
     fontSize: 16,
-    fontWeight: "bold",
+    fontWeight: 'bold',
+  },
+  loadingText: {
+    color: '#00FFEA',
+    marginTop: 16,
+    fontSize: 16,
   },
 });
 

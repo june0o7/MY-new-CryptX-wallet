@@ -176,24 +176,24 @@ function Home({ navigation }) {
             <View style={styles.buttonRow}>
               <TouchableOpacity style={styles.iconButton}onPress={() => navigation.navigate('Pay')}>
                 <Image
-                  source={require("./assets/icons/uparrow.png")}
+                  source={require("./assets/icons/direct.png")}
                   style={styles.iconImage}
                 />
                 <Text style={styles.iconText}>Send</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.iconButton}onPress={() => navigation.navigate('Wallet')}>
                 <Image
-                  source={require("./assets/icons/downarrow.png")}
+                  source={require("./assets/icons/wallet2.png")}
                   style={styles.iconImage}
                 />
-                <Text style={styles.iconText}>Add</Text>
+                <Text style={styles.iconText}>Wallet</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.iconButton}onPress={() => navigation.navigate('Pay To Contact')}>
                 <Image
-                  source={require("./assets/icons/mg.png")}
+                  source={require("./assets/icons/add-friend.png")}
                   style={styles.iconImage}
                 />
-                <Text style={styles.iconText}>Find</Text>
+                <Text style={styles.iconText}>Friends</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -266,7 +266,7 @@ function Home({ navigation }) {
           {/* New: News Section */}
           {/* <Text style={styles.sectionHeader}>Latest News</Text> */}
           <View>
-      <Text style={styles.sectionHeader}>Latest News</Text>
+      {/* <Text style={styles.sectionHeader}>Latest News</Text> */}
       <View style={styles.newsContainer}>
         {news.map((item, index) => (
           <View key={index} style={styles.newsItem}>
@@ -280,27 +280,7 @@ function Home({ navigation }) {
           {/* Existing Businesses Section */}
           <Text style={styles.sectionHeader}>Businesses</Text>
           <View style={styles.businessesContainer}>
-            {/* <ScrollView horizontal={true} showsHorizontalScrollIndicator={false}>
-              {[
-                "jio-logo-icon",
-                "zomato",
-                "swiggy",
-                "bms",
-                "lenskart",
-                "jio-logo-icon",
-                "zomato",
-                "swiggy",
-                "bms",
-                "lenskart",
-              ].map((icon, index) => (
-                <TouchableOpacity key={index} style={styles.businessIcon}>
-                  <Image
-                    source={require(`./assets/icons/${icon}.png`)}
-                    style={styles.businessImage}
-                  />
-                </TouchableOpacity>
-              ))}
-            </ScrollView> */}
+            
 
 
 
