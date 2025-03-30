@@ -185,6 +185,13 @@ function SendCrypto({ route, navigation }) {
               {user.walletAddress}
             </Text>
           </View>
+          <TouchableOpacity 
+            style={styles.chatButton}
+            onPress={() => navigation.navigate('ChatWithFriend', { user })}
+          >
+            <Ionicons name="chatbubble-ellipses" size={20} color="#00FFEA" />
+            <Text style={styles.chatButtonText}>Chat with {user.name}</Text>
+          </TouchableOpacity>
         </Animatable.View>
 
         {/* Amount Input */}
@@ -209,7 +216,7 @@ function SendCrypto({ route, navigation }) {
             onPress={confirmTransaction}
             disabled={!amount}
           >
-            <Text style={styles.sendButtonText}>Send Transaction</Text>
+            <Text style={styles.sendButtonText}>Send</Text>
           </TouchableOpacity>
         </Animatable.View>
 
@@ -394,6 +401,21 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginLeft: 8,
     flex: 1,
+  },
+  chatButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 15,
+    padding: 10,
+    borderRadius: 8,
+    backgroundColor: 'rgba(0, 255, 234, 0.1)',
+    justifyContent: 'center',
+  },
+  chatButtonText: {
+    color: '#00FFEA',
+    fontSize: 14,
+    fontWeight: '500',
+    marginLeft: 8,
   },
   inputContainer: {
     marginBottom: 20,

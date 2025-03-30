@@ -9,6 +9,7 @@ import Home from './Home';
 import design from './design';
 // import ChatScreen from './chat';
 // import MyComponent from './MyComponent';
+import ChatWithFriend from './ChatWithFriend';
 import Main from './main';
 // import Tudung from './tudung';
 import PayToContact from './PayToContact';
@@ -52,6 +53,7 @@ export default function App() {
       <stack.Screen name="design" component={design} options={{headerShown:true}}/>
                 <stack.Screen name="PrivacyAndSecurity" component={PrivacyAndSecurity} />
                 <stack.Screen name="HelpAndFeedback" component={HelpAndFeedback} />
+                <stack.Screen name="ChatWithFriend" component={ChatWithFriend}  options={{headerShown:false}}/>
                 {/* <stack.Screen name="chat" component={ChatScreen} /> */}
       </stack.Navigator>
     </NavigationContainer>

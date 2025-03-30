@@ -1,10 +1,22 @@
 import { useState } from 'react';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, ActivityIndicator, ScrollView, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import { 
+  StyleSheet, 
+  Text, 
+  View, 
+  TextInput, 
+  TouchableOpacity, 
+  ActivityIndicator, 
+  ScrollView, 
+  Alert, 
+  KeyboardAvoidingView, 
+  Platform 
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc, getFirestore } from 'firebase/firestore';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialIcons } from '@expo/vector-icons';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import app from './firebaseConfig';
 
 const SignUpScreen = () => {
@@ -25,6 +37,8 @@ const SignUpScreen = () => {
     const [loading, setLoading] = useState(false);
     const [secureTextEntry, setSecureTextEntry] = useState(true);
     const [errors, setErrors] = useState({});
+    const [showDatePicker, setShowDatePicker] = useState(false);
+    const [dobDate, setDobDate] = useState(new Date());
 
     // Input focus state
     const [focusedField, setFocusedField] = useState(null);
@@ -35,6 +49,20 @@ const SignUpScreen = () => {
         if (errors[name]) {
             setErrors(prev => ({ ...prev, [name]: null }));
         }
+    };
+
+    const onDateChange = (event, selectedDate) => {
+        setShowDatePicker(Platform.OS === 'ios');
+        if (selectedDate) {
+            setDobDate(selectedDate);
+            const formattedDate = `${selectedDate.getMonth() + 1}/${selectedDate.getDate()}/${selectedDate.getFullYear()}`;
+            handleInputChange('dob', formattedDate);
+        }
+    };
+
+    const showDatepicker = () => {
+        setShowDatePicker(true);
+        setFocusedField(null); // Remove focus from any input
     };
 
     const validateForm = () => {
@@ -87,7 +115,7 @@ const SignUpScreen = () => {
                 phone: formData.phone,
                 address: formData.address,
                 dob: formData.dob,
-                pin: formData.pin, // Note: In production, never store PINs in plain text
+                pin: formData.pin,
                 createdAt: new Date().toISOString(),
             };
 
@@ -139,7 +167,7 @@ const SignUpScreen = () => {
                     </View>
 
                     <View style={styles.formContainer}>
-                        {/* Username */}
+                        {/* Name */}
                         <View style={[
                             styles.inputContainer, 
                             focusedField === 'name' && styles.inputFocused,
@@ -152,19 +180,19 @@ const SignUpScreen = () => {
                             />
                             <TextInput
                                 style={styles.input}
-                                placeholder="name"
-                                textContentType="oneTimeCode"  // Prevents autofill suggestions
-                                importantForAutofill="no" // Android: Disables autofill
-                                autoComplete="off" // Android & iOS: Prevents autofill
+                                placeholder="Name"
+                                textContentType="oneTimeCode"
+                                importantForAutofill="no"
+                                autoComplete="off"
                                 disableFullscreenUI={true}
                                 placeholderTextColor="#6C6C6C"
-                                value={formData.username}
+                                value={formData.name}
                                 onChangeText={(text) => handleInputChange('name', text)}
                                 onFocus={() => setFocusedField('name')}
                                 onBlur={() => setFocusedField(null)}
                             />
                         </View>
-                        {errors.username && <Text style={styles.errorText}>{errors.username}</Text>}
+                        {errors.name && <Text style={styles.errorText}>{errors.name}</Text>}
 
                         {/* Email */}
                         <View style={[
@@ -294,11 +322,14 @@ const SignUpScreen = () => {
                         </View>
 
                         {/* Date of Birth */}
-                        <View style={[
-                            styles.inputContainer, 
-                            focusedField === 'dob' && styles.inputFocused,
-                            errors.dob && styles.inputError
-                        ]}>
+                        <TouchableOpacity
+                            style={[
+                                styles.inputContainer, 
+                                focusedField === 'dob' && styles.inputFocused,
+                                errors.dob && styles.inputError
+                            ]}
+                            onPress={showDatepicker}
+                        >
                             <MaterialIcons 
                                 name="cake" 
                                 size={20} 
@@ -309,12 +340,21 @@ const SignUpScreen = () => {
                                 placeholder="Date of Birth (MM/DD/YYYY)"
                                 placeholderTextColor="#6C6C6C"
                                 value={formData.dob}
-                                onChangeText={(text) => handleInputChange('dob', text)}
-                                onFocus={() => setFocusedField('dob')}
-                                onBlur={() => setFocusedField(null)}
+                                editable={false}
+                                pointerEvents="none"
                             />
-                        </View>
+                        </TouchableOpacity>
                         {errors.dob && <Text style={styles.errorText}>{errors.dob}</Text>}
+
+                        {showDatePicker && (
+                            <DateTimePicker
+                                value={dobDate}
+                                mode="date"
+                                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                                onChange={onDateChange}
+                                maximumDate={new Date()}
+                            />
+                        )}
 
                         {/* Sign Up Button */}
                         <TouchableOpacity
