@@ -7,6 +7,7 @@ import { getAuth, signOut } from "firebase/auth";
 import { Ionicons, MaterialIcons, FontAwesome, AntDesign } from '@expo/vector-icons';
 import * as Animatable from 'react-native-animatable';
 import Home from "./Home";
+import ChatScreen from "./chat";
 import ID from "./ID";
 import Wallet from "./Wallet";
 import design from "./design";
@@ -262,6 +263,15 @@ function Main({ navigation }) {
           drawerIcon: getIconComponent('user-circle', 'FontAwesome')
 ,
           headerTitle: "My Profile"
+        }}
+      />
+      <Drawer.Screen
+        name="Chat"
+        component={ChatScreen}
+        options={{
+          drawerIcon: getIconComponent('chatbubble'),
+          
+          headerTitle: "chat"
         }}
       />
       <Drawer.Screen

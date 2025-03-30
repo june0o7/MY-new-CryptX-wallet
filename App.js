@@ -7,6 +7,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import SignUp from './SignUp';
 import Home from './Home';
 import design from './design';
+// import ChatScreen from './chat';
 // import MyComponent from './MyComponent';
 import Main from './main';
 // import Tudung from './tudung';
@@ -51,6 +52,7 @@ export default function App() {
       <stack.Screen name="design" component={design} options={{headerShown:true}}/>
                 <stack.Screen name="PrivacyAndSecurity" component={PrivacyAndSecurity} />
                 <stack.Screen name="HelpAndFeedback" component={HelpAndFeedback} />
+                {/* <stack.Screen name="chat" component={ChatScreen} /> */}
       </stack.Navigator>
     </NavigationContainer>
   );

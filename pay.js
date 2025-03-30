@@ -23,7 +23,7 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 
 function Pay(props) {
-  const ganacheUrl = 'http://192.168.29.107:7545'; // home
+  const ganacheUrl = 'http://192.168.29.107:7545'; // home2
   const provider = new ethers.JsonRpcProvider(ganacheUrl, {
     name: 'ganache',
     chainId: 1337,

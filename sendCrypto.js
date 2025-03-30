@@ -10,19 +10,23 @@ import {
   Alert,
   ActivityIndicator,
   Animated,
+  Dimensions
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { FontAwesome, Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { getAuth } from 'firebase/auth';
 import { ethers } from 'ethers';
-import { doc, getFirestore, getDoc, collection, getDocs, updateDoc } from 'firebase/firestore';
+import { doc, getFirestore, getDoc } from 'firebase/firestore';
 import app from './firebaseConfig';
 import ConfettiCannon from 'react-native-confetti-cannon';
+import * as Animatable from 'react-native-animatable';
 
+const { width, height } = Dimensions.get('window');
 const db = getFirestore(app);
 const auth = getAuth(app);
 
 function SendCrypto({ route, navigation }) {
-  const { user } = route.params; // Recipient user data
+  const { user } = route.params;
   const [amount, setAmount] = useState('');
   const [transactionStatus, setTransactionStatus] = useState('');
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -33,7 +37,7 @@ function SendCrypto({ route, navigation }) {
   const [balance, setBalance] = useState('0.0');
   const [isLoading, setIsLoading] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
-  const fadeAnim = useState(new Animated.Value(0))[0]; // For fade-in animation
+  const fadeAnim = useState(new Animated.Value(0))[0];
 
   const provider = new ethers.JsonRpcProvider('http://192.168.29.107:7545', {
     name: 'ganache',
@@ -146,87 +150,156 @@ function SendCrypto({ route, navigation }) {
   }, [transactions]);
 
   return (
-    <LinearGradient colors={['#0A0A0A', '#1A1A2E', '#16213E']} style={styles.container}>
-      <View style={styles.content}>
-        {/* Balance Display */}
-        <View style={styles.balanceContainer}>
-          <Text style={styles.balanceText}>Current Balance: {parseFloat(balance).toFixed(2)} ETH</Text>
-          <TouchableOpacity style={styles.refreshButton} onPress={fetchBalance}>
-            {isLoading ? (
-              <ActivityIndicator color="#00FFEA" />
-            ) : (
-              <Text style={styles.refreshButtonText}>↻</Text>
-            )}
-          </TouchableOpacity>
-        </View>
+    <LinearGradient colors={["#0F0F2D", "#1A1A2E", "#16213E"]} style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        {/* Header */}
+        <Animatable.View animation="fadeInDown" duration={800} style={styles.header}>
+          <Text style={styles.title}>Send Crypto</Text>
+          <Text style={styles.subtitle}>Transfer ETH to {user.name}</Text>
+        </Animatable.View>
 
-        {/* Recipient Info */}
-        <View style={styles.infoBox}>
-          <Text style={styles.infoLabel}>Recipient:</Text>
-          <Text style={styles.infoText}>{user.name}</Text>
-          <Text style={styles.infoLabel}>Wallet Address:</Text>
-          <Text style={styles.infoText}>{user.walletAddress}</Text>
-        </View>
+        {/* Balance Card */}
+        <Animatable.View animation="fadeInUp" duration={600} style={styles.balanceCard}>
+          <View style={styles.balanceHeader}>
+            <Text style={styles.balanceLabel}>Your Balance</Text>
+            <TouchableOpacity onPress={fetchBalance} style={styles.refreshButton}>
+              {isLoading ? (
+                <ActivityIndicator color="#00FFEA" size="small" />
+              ) : (
+                <Ionicons name="refresh" size={20} color="#00FFEA" />
+              )}
+            </TouchableOpacity>
+          </View>
+          <Text style={styles.balanceAmount}>{parseFloat(balance).toFixed(4)} ETH</Text>
+        </Animatable.View>
+
+        {/* Recipient Card */}
+        <Animatable.View animation="fadeInUp" duration={600} delay={100} style={styles.recipientCard}>
+          <View style={styles.recipientHeader}>
+            <FontAwesome name="user" size={20} color="#00FFEA" />
+            <Text style={styles.recipientName}>{user.name}</Text>
+          </View>
+          <View style={styles.walletAddressContainer}>
+            <MaterialIcons name="account-balance-wallet" size={18} color="#6C6C6C" />
+            <Text style={styles.walletAddress} numberOfLines={1} ellipsizeMode="middle">
+              {user.walletAddress}
+            </Text>
+          </View>
+        </Animatable.View>
 
         {/* Amount Input */}
-        <TextInput
-          style={styles.input}
-          placeholder="Enter Amount (ETH)"
-          placeholderTextColor="#6C6C6C"
-          value={amount}
-          onChangeText={setAmount}
-          keyboardType="numeric"
-        />
+        <Animatable.View animation="fadeInUp" duration={600} delay={200} style={styles.inputContainer}>
+          <Text style={styles.inputLabel}>Amount to Send (ETH)</Text>
+          <View style={styles.amountInputWrapper}>
+            <TextInput
+              style={styles.amountInput}
+              placeholder="0.00"
+              placeholderTextColor="#6C6C6C"
+              value={amount}
+              onChangeText={setAmount}
+              keyboardType="numeric"
+            />
+          </View>
+        </Animatable.View>
 
         {/* Send Button */}
-        <TouchableOpacity style={styles.sendButton} onPress={confirmTransaction}>
-          <Text style={styles.sendButtonText}>Send</Text>
-        </TouchableOpacity>
+        <Animatable.View animation="fadeInUp" duration={600} delay={300}>
+          <TouchableOpacity 
+            style={[styles.sendButton, !amount && styles.disabledButton]} 
+            onPress={confirmTransaction}
+            disabled={!amount}
+          >
+            <Text style={styles.sendButtonText}>Send Transaction</Text>
+          </TouchableOpacity>
+        </Animatable.View>
 
         {/* Transaction Status */}
-        {transactionStatus ? (
-          <Text style={[styles.statusText, { color: transactionStatus.includes('successful') ? '#00FFEA' : '#FF5733' }]}>
-            {transactionStatus}
-          </Text>
-        ) : null}
+        {transactionStatus && (
+          <Animatable.View animation="fadeIn" duration={500} style={styles.statusContainer}>
+            <Text style={[
+              styles.statusText, 
+              transactionStatus.includes('successful') ? styles.successText : styles.errorText
+            ]}>
+              {transactionStatus}
+            </Text>
+          </Animatable.View>
+        )}
 
         {/* Transaction History */}
-        <Text style={styles.historyHeader}>Recent Transactions</Text>
-        <ScrollView style={styles.historyContainer}>
+        <Animatable.View animation="fadeInUp" duration={600} delay={400} style={styles.historyContainer}>
+          <View style={styles.historyHeader}>
+            <Ionicons name="time" size={20} color="#00FFEA" />
+            <Text style={styles.historyTitle}>Recent Transactions</Text>
+          </View>
+          
           {transactions.map((tx) => (
             <Animated.View
               key={tx.id}
-              style={[styles.transactionItem, { opacity: fadeAnim }]}
+              style={[styles.transactionCard, { opacity: fadeAnim }]}
             >
-              <LinearGradient
-                colors={['#1A1A2E', '#16213E']}
-                style={styles.transactionGradient}
-              >
+              <View style={styles.transactionIcon}>
+                <FontAwesome 
+                  name={tx.type === 'Sent' ? 'arrow-up' : 'arrow-down'} 
+                  size={16} 
+                  color={tx.type === 'Sent' ? '#FF5252' : '#4CAF50'} 
+                />
+              </View>
+              <View style={styles.transactionDetails}>
                 <Text style={styles.transactionText}>
-                  {tx.type === 'Sent' ? `Sent ${tx.amount} ETH to ${tx.to}` : `Received ${tx.amount} ETH from ${tx.from}`}
+                  {tx.type === 'Sent' ? `Sent to ${tx.to}` : `Received from ${tx.from}`}
                 </Text>
                 <Text style={styles.transactionDate}>{tx.date}</Text>
-              </LinearGradient>
+              </View>
+              <Text style={[
+                styles.transactionAmount,
+                tx.type === 'Sent' ? styles.sentAmount : styles.receivedAmount
+              ]}>
+                {tx.type === 'Sent' ? '-' : '+'}{tx.amount} ETH
+              </Text>
             </Animated.View>
           ))}
-        </ScrollView>
-      </View>
+        </Animatable.View>
+      </ScrollView>
 
       {/* Confirmation Modal */}
-      <Modal visible={isModalVisible} transparent={true} animationType="slide">
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalText}>Confirm Transaction</Text>
-            <Text style={styles.modalText}>Send {amount} ETH to {user.name}?</Text>
+      <Modal visible={isModalVisible} transparent={true} animationType="fade">
+        <View style={styles.modalOverlay}>
+          <Animatable.View animation="fadeInUp" duration={300} style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Confirm Transaction</Text>
+            <View style={styles.modalBody}>
+              <View style={styles.modalRow}>
+                <Text style={styles.modalLabel}>Amount:</Text>
+                <Text style={styles.modalValue}>{amount} ETH</Text>
+              </View>
+              <View style={styles.modalRow}>
+                <Text style={styles.modalLabel}>To:</Text>
+                <Text style={styles.modalValue}>{user.name}</Text>
+              </View>
+              <View style={styles.modalRow}>
+                <Text style={styles.modalLabel}>Address:</Text>
+                <Text style={[styles.modalValue, styles.walletAddress]}>{user.walletAddress}</Text>
+              </View>
+            </View>
             <View style={styles.modalButtons}>
-              <TouchableOpacity style={styles.modalButton} onPress={() => setIsModalVisible(false)}>
+              <TouchableOpacity 
+                style={[styles.modalButton, styles.cancelButton]} 
+                onPress={() => setIsModalVisible(false)}
+              >
                 <Text style={styles.modalButtonText}>Cancel</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.modalButton} onPress={sendEth}>
-                <Text style={styles.modalButtonText}>Confirm</Text>
+              <TouchableOpacity 
+                style={[styles.modalButton, styles.confirmButton]} 
+                onPress={sendEth}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <ActivityIndicator color="#FFFFFF" />
+                ) : (
+                  <Text style={styles.modalButtonText}>Confirm</Text>
+                )}
               </TouchableOpacity>
             </View>
-          </View>
+          </Animatable.View>
         </View>
       </Modal>
 
@@ -234,7 +307,8 @@ function SendCrypto({ route, navigation }) {
       {showConfetti && (
         <ConfettiCannon
           count={200}
-          origin={{ x: -10, y: 0 }}
+          origin={{ x: width / 2, y: 0 }}
+          explosionSpeed={500}
           fallSpeed={3000}
           fadeOut={true}
         />
@@ -247,130 +321,248 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  content: {
-    flex: 1,
-    padding: 20,
+  scrollContainer: {
+    flexGrow: 1,
+    padding: 24,
+    paddingBottom: 40,
   },
-  balanceContainer: {
+  header: {
+    marginBottom: 30,
+    alignItems: 'center',
+  },
+  title: {
+    fontSize: 26,
+    fontWeight: 'bold',
+    color: '#00FFEA',
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: '#6C6C6C',
+  },
+  balanceCard: {
+    backgroundColor: '#1A1A2E',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 234, 0.2)',
+  },
+  balanceHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 10,
   },
-  balanceText: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#00FFEA',
+  balanceLabel: {
+    color: '#6C6C6C',
+    fontSize: 14,
   },
   refreshButton: {
-    padding: 10,
-    borderRadius: 20,
-    backgroundColor: '#1A1A2E',
+    padding: 6,
   },
-  refreshButtonText: {
-    fontSize: 24,
-    color: '#00FFEA',
-  },
-  infoBox: {
-    backgroundColor: '#1A1A2E',
-    borderRadius: 10,
-    padding: 15,
-    marginBottom: 20,
-  },
-  infoLabel: {
-    color: '#00FFEA',
-    fontSize: 16,
+  balanceAmount: {
+    color: '#FFFFFF',
+    fontSize: 28,
     fontWeight: 'bold',
   },
-  infoText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    marginTop: 5,
-  },
-  input: {
-    width: '100%',
-    height: 50,
-    borderColor: '#00FFEA',
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 15,
-    marginBottom: 20,
-    color: '#FFFFFF',
+  recipientCard: {
     backgroundColor: '#1A1A2E',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 234, 0.2)',
+  },
+  recipientHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  recipientName: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '600',
+    marginLeft: 12,
+  },
+  walletAddressContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  walletAddress: {
+    color: '#6C6C6C',
+    fontSize: 14,
+    marginLeft: 8,
+    flex: 1,
+  },
+  inputContainer: {
+    marginBottom: 20,
+  },
+  inputLabel: {
+    color: '#6C6C6C',
+    fontSize: 14,
+    marginBottom: 8,
+  },
+  amountInputWrapper: {
+    backgroundColor: '#1A1A2E',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#2D2D42',
+    paddingHorizontal: 16,
+  },
+  amountInput: {
+    height: 56,
+    color: '#FFFFFF',
+    fontSize: 24,
+    fontWeight: 'bold',
   },
   sendButton: {
     backgroundColor: '#00FFEA',
-    padding: 15,
-    borderRadius: 10,
+    borderRadius: 12,
+    height: 56,
+    justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,
   },
+  disabledButton: {
+    backgroundColor: '#2D2D42',
+  },
   sendButtonText: {
     color: '#0A0A0A',
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
+  },
+  statusContainer: {
+    backgroundColor: 'rgba(0, 255, 234, 0.1)',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 20,
+    alignItems: 'center',
   },
   statusText: {
-    fontSize: 16,
-    textAlign: 'center',
-    marginBottom: 20,
+    fontSize: 14,
+    fontWeight: '500',
   },
-  historyHeader: {
-    fontSize: 20,
-    fontWeight: 'bold',
+  successText: {
     color: '#00FFEA',
-    marginBottom: 10,
+  },
+  errorText: {
+    color: '#FF5252',
   },
   historyContainer: {
+    marginTop: 20,
+  },
+  historyHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  historyTitle: {
+    color: '#00FFEA',
+    fontSize: 18,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  transactionCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#1A1A2E',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+  },
+  transactionIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(0, 255, 234, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  transactionDetails: {
     flex: 1,
-  },
-  transactionItem: {
-    marginBottom: 10,
-  },
-  transactionGradient: {
-    padding: 15,
-    borderRadius: 10,
   },
   transactionText: {
     color: '#FFFFFF',
     fontSize: 16,
+    fontWeight: '500',
+    marginBottom: 4,
   },
   transactionDate: {
     color: '#6C6C6C',
-    fontSize: 14,
-    marginTop: 5,
+    fontSize: 12,
   },
-  modalContainer: {
+  transactionAmount: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  sentAmount: {
+    color: '#FF5252',
+  },
+  receivedAmount: {
+    color: '#4CAF50',
+  },
+  modalOverlay: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
   },
   modalContent: {
+    width: width * 0.85,
     backgroundColor: '#1A1A2E',
-    padding: 20,
-    borderRadius: 10,
-    width: '80%',
+    borderRadius: 16,
+    padding: 24,
+    borderWidth: 1,
+    borderColor: '#00FFEA',
   },
-  modalText: {
-    color: '#FFFFFF',
-    fontSize: 18,
-    marginBottom: 20,
+  modalTitle: {
+    color: '#00FFEA',
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 16,
     textAlign: 'center',
+  },
+  modalBody: {
+    marginBottom: 24,
+  },
+  modalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  modalLabel: {
+    color: '#6C6C6C',
+    fontSize: 16,
+  },
+  modalValue: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '500',
   },
   modalButtons: {
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
   modalButton: {
-    backgroundColor: '#00FFEA',
-    padding: 10,
-    borderRadius: 5,
-    width: '45%',
+    flex: 1,
+    borderRadius: 10,
+    height: 48,
+    justifyContent: 'center',
     alignItems: 'center',
   },
+  cancelButton: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: '#6C6C6C',
+    marginRight: 10,
+  },
+  confirmButton: {
+    backgroundColor: '#00FFEA',
+    marginLeft: 10,
+  },
   modalButtonText: {
-    color: '#0A0A0A',
     fontSize: 16,
     fontWeight: 'bold',
   },

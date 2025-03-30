@@ -1,17 +1,14 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   StyleSheet,
   Text,
   View,
   TextInput,
   TouchableOpacity,
-  ScrollView,
   ActivityIndicator,
   Alert,
-  Modal,
-  Keyboard,
+  ScrollView,
   Animated,
-  Easing,
   Dimensions
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
@@ -31,101 +28,75 @@ function AddFriendPage({ navigation }) {
   const [userExists, setUserExists] = useState(false);
   const [loading, setLoading] = useState(false);
   const [cuid, setCuid] = useState(null);
-  const [showModal, setShowModal] = useState(false);
   const [userData, setUserData] = useState(null);
   const [shakeAnimation] = useState(new Animated.Value(0));
-
-  // Animation for error state
-  const shake = () => {
-    Animated.sequence([
-      Animated.timing(shakeAnimation, {
-        toValue: 10,
-        duration: 50,
-        useNativeDriver: true
-      }),
-      Animated.timing(shakeAnimation, {
-        toValue: -10,
-        duration: 50,
-        useNativeDriver: true
-      }),
-      Animated.timing(shakeAnimation, {
-        toValue: 10,
-        duration: 50,
-        useNativeDriver: true
-      }),
-      Animated.timing(shakeAnimation, {
-        toValue: 0,
-        duration: 50,
-        useNativeDriver: true
-      })
-    ]).start();
-  };
 
   const checkUserExists = async () => {
     if (!phoneNumber) {
       Alert.alert("Error", "Please enter a phone number.");
-      shake();
       return;
     }
 
-    Keyboard.dismiss();
     setLoading(true);
     try {
       const usersRef = collection(db, "users");
       const q = query(usersRef, where("phone", "==", phoneNumber));
       const querySnapshot = await getDocs(q);
+      const cuid = querySnapshot.docs[0]?.data()?.uid;
+      setCuid(cuid);
 
       if (!querySnapshot.empty) {
-        const userDoc = querySnapshot.docs[0].data();
         setUserExists(true);
-        setCuid(userDoc.uid);
-        setUserData(userDoc);
+        setUserData(querySnapshot.docs[0].data());
       } else {
         setUserExists(false);
-        shake();
-        Alert.alert("Not Found", "No user found with this phone number.");
+        Alert.alert("Error", "User does not exist in the database.");
       }
     } catch (error) {
       console.error("Error checking user:", error);
-      Alert.alert("Error", "Failed to check user. Please try again.");
+      Alert.alert("Error", "Failed to check user.");
     } finally {
       setLoading(false);
     }
   };
 
   const saveFriend = async () => {
-    if (!userExists) return;
+    if (!userExists) {
+      Alert.alert("Error", "User does not exist in the database.");
+      return;
+    }
 
     try {
       const currentUserRef = doc(db, "users", auth.currentUser.uid);
       const currentUserSnap = await getDoc(currentUserRef);
-
+      
       if (currentUserSnap.exists()) {
-        await updateDoc(currentUserRef, {
-          friends: arrayUnion({
-            phone: phoneNumber,
-            uid: cuid,
-            name: userData.name || 'Unknown',
-            addedAt: new Date().toISOString()
-          }),
-        });
+        const userData = currentUserSnap.data();
+        
+        if (!userData.friends) {
+          await updateDoc(currentUserRef, { friends: [] });
+        }
 
-        Alert.alert("Success", `${userData.name || 'User'} added to your contacts!`);
-        resetForm();
+        // In your AddFriendPage's saveFriend function:
+await updateDoc(currentUserRef, {
+  friends: arrayUnion({
+    phone: phoneNumber,
+    uid: cuid,
+    name: userData.name || 'Unknown',
+    addedAt: new Date().toISOString()
+  }),
+});
+
+        Alert.alert("Success", "Friend saved successfully!");
+        setPhoneNumber("");
+        setUserExists(false);
+      } else {
+        Alert.alert("Error", "User document does not exist.");
       }
     } catch (error) {
       console.error("Error saving friend:", error);
-      Alert.alert("Error", "Failed to save contact. Please try again.");
-    } finally {
-      setShowModal(false);
+      Alert.alert("Error", "Failed to save friend.");
     }
-  };
-
-  const resetForm = () => {
-    setPhoneNumber("");
-    setUserExists(false);
-    setCuid(null);
-    setUserData(null);
   };
 
   return (
@@ -143,12 +114,7 @@ function AddFriendPage({ navigation }) {
           <Text style={styles.subtitle}>Enter your friend's phone number</Text>
         </Animatable.View>
 
-        <Animated.View 
-          style={[
-            styles.inputContainer,
-            { transform: [{ translateX: shakeAnimation }] }
-          ]}
-        >
+        <View style={styles.inputContainer}>
           <MaterialIcons 
             name="phone" 
             size={24} 
@@ -175,7 +141,7 @@ function AddFriendPage({ navigation }) {
               <Ionicons name="close-circle" size={20} color="#6C6C6C" />
             </TouchableOpacity>
           ) : null}
-        </Animated.View>
+        </View>
 
         <TouchableOpacity 
           style={styles.searchButton}
@@ -203,10 +169,9 @@ function AddFriendPage({ navigation }) {
                 <FontAwesome name="user" size={24} color="#00FFEA" />
               </View>
               <View style={styles.userDetails}>
-              <Text style={styles.userName}>
-  {userData ? userData.name || 'Unknown User' : 'Unknown User'}
-</Text>
-
+                <Text style={styles.userName}>
+                  {userData?.name || 'Unknown User'}
+                </Text>
                 <Text style={styles.userPhone}>{phoneNumber}</Text>
               </View>
               <FontAwesome 
@@ -218,7 +183,7 @@ function AddFriendPage({ navigation }) {
 
             <TouchableOpacity
               style={styles.saveButton}
-              onPress={() => setShowModal(true)}
+              onPress={saveFriend}
             >
               <Text style={styles.saveButtonText}>Add to Contacts</Text>
             </TouchableOpacity>
@@ -233,43 +198,6 @@ function AddFriendPage({ navigation }) {
           <Text style={styles.viewContactsText}>View My Contacts</Text>
         </TouchableOpacity>
       </ScrollView>
-
-      {/* Confirmation Modal */}
-      <Modal
-        visible={showModal}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setShowModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <Animatable.View 
-            animation="fadeInUp"
-            duration={400}
-            style={styles.modalContainer}
-          >
-            <Text style={styles.modalTitle}>Confirm Contact</Text>
-            <Text style={styles.modalText}>
-  Add {userData ? userData.name || 'this user' : 'this user'} to your contacts?
-</Text>
-            
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={[styles.modalButton, styles.cancelButton]}
-                onPress={() => setShowModal(false)}
-              >
-                <Text style={styles.modalButtonText}>Cancel</Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity
-                style={[styles.modalButton, styles.confirmButton]}
-                onPress={saveFriend}
-              >
-                <Text style={styles.modalButtonText}>Confirm</Text>
-              </TouchableOpacity>
-            </View>
-          </Animatable.View>
-        </View>
-      </Modal>
     </LinearGradient>
   );
 }
@@ -394,58 +322,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     marginLeft: 10,
-  },
-  modalOverlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-  },
-  modalContainer: {
-    width: width * 0.85,
-    backgroundColor: '#1A1A2E',
-    borderRadius: 16,
-    padding: 24,
-    borderWidth: 1,
-    borderColor: '#00FFEA',
-  },
-  modalTitle: {
-    color: '#00FFEA',
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  modalText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    marginBottom: 24,
-    textAlign: 'center',
-  },
-  modalButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  modalButton: {
-    flex: 1,
-    borderRadius: 10,
-    height: 48,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  cancelButton: {
-    backgroundColor: 'transparent',
-    borderWidth: 1,
-    borderColor: '#FF5252',
-    marginRight: 10,
-  },
-  confirmButton: {
-    backgroundColor: '#00FFEA',
-    marginLeft: 10,
-  },
-  modalButtonText: {
-    fontSize: 16,
-    fontWeight: 'bold',
   },
 });
 

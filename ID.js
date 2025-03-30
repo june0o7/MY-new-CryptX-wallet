@@ -110,8 +110,8 @@ function ID(props) {
           />
           <InfoCard 
             icon="calendar" 
-            text={data?.DOB} 
-            onPress={() => copyToClipboard(data?.DOB)}
+            text={data?.dob} 
+            onPress={() => copyToClipboard(data?.dob)}
           />
           <InfoCard 
             icon="map-marker" 

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   StyleSheet,
   Text,
@@ -36,51 +36,92 @@ function PayToContact({ navigation }) {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [scaleValue] = useState(new Animated.Value(1));
 
-  const fetchFriends = async () => {
+  // Improved fetchFriends function with proper error handling
+  const fetchFriends = useCallback(async () => {
     try {
+      setLoading(true);
       const currentUser = auth.currentUser;
+      
       if (!currentUser) {
         Alert.alert('Authentication Required', 'Please sign in to view contacts');
+        setLoading(false);
         return;
       }
 
       const userDocRef = doc(db, 'users', currentUser.uid);
       const userDocSnap = await getDoc(userDocRef);
 
-      if (userDocSnap.exists()) {
-        const userData = userDocSnap.data();
-        const friendsPhones = userData.friends || [];
+      if (!userDocSnap.exists()) {
+        Alert.alert('Error', 'User document not found');
+        setLoading(false);
+        return;
+      }
 
-        const friendsPromises = friendsPhones.map(async (phone) => {
+      const userData = userDocSnap.data();
+      const friendsList = userData.friends || [];
+
+      // If no friends, return early
+      if (friendsList.length === 0) {
+        setFriends([]);
+        setFilteredFriends([]);
+        setLoading(false);
+        return;
+      }
+
+      // Fetch friend details for each phone number
+      const friendsPromises = friendsList.map(async (friend) => {
+        try {
+          // Check if friend is a string (phone number) or already an object
+          const phoneNumber = typeof friend === 'string' ? friend : friend.phone;
+          
+          if (!phoneNumber) return null;
+
           const usersCollection = collection(db, 'users');
-          const q = query(usersCollection, where('phone', '==', phone));
+          const q = query(usersCollection, where('phone', '==', phoneNumber));
           const querySnapshot = await getDocs(q);
 
-          if (!querySnapshot.empty) {
-            const friendData = querySnapshot.docs[0].data();
-            return {
-              id: querySnapshot.docs[0].id,
-              name: friendData.name,
-              phone: friendData.phone,
-              walletAddress: friendData.walletaddress,
-              avatar: friendData.photoURL || null
-            };
-          }
-          return null;
-        });
+          if (querySnapshot.empty) return null;
 
-        const friendsData = (await Promise.all(friendsPromises)).filter(Boolean);
-        setFriends(friendsData);
-        setFilteredFriends(friendsData);
-      }
+          const friendDoc = querySnapshot.docs[0];
+          const friendData = friendDoc.data();
+          
+          return {
+            id: friendDoc.id,
+            name: friendData.name || 'Unknown',
+            phone: friendData.phone,
+            walletAddress: friendData.walletaddress,
+            avatar: friendData.photoURL || null
+          };
+        } catch (error) {
+          console.error('Error fetching friend:', error);
+          return null;
+        }
+      });
+
+      const friendsData = (await Promise.all(friendsPromises)).filter(Boolean);
+      setFriends(friendsData);
+      setFilteredFriends(friendsData);
+      
     } catch (error) {
-      console.error('Error fetching friends:', error);
+      console.error('Error in fetchFriends:', error);
       Alert.alert('Error', 'Failed to load contacts. Please try again.');
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, []);
+
+  // Add focus listener to refresh when screen comes into focus
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      fetchFriends();
+    });
+
+    // Initial load
+    fetchFriends();
+
+    return unsubscribe;
+  }, [fetchFriends, navigation]);
 
   const handleSearch = (query) => {
     setSearchQuery(query);
@@ -96,6 +137,8 @@ function PayToContact({ navigation }) {
     setRefreshing(true);
     fetchFriends();
   };
+
+  // ... rest of your component code remains the same ...
 
   const confirmDelete = (friend) => {
     setSelectedFriend(friend);
@@ -127,18 +170,25 @@ function PayToContact({ navigation }) {
       const currentUser = auth.currentUser;
       const userDocRef = doc(db, 'users', currentUser.uid);
       const userDocSnap = await getDoc(userDocRef);
-
+  
       if (userDocSnap.exists()) {
         const userData = userDocSnap.data();
-        const updatedFriends = userData.friends.filter(
-          (friendPhone) => friendPhone !== selectedFriend.phone
-        );
-
+        
+        // Handle both string (phone) and object friend formats
+        const updatedFriends = userData.friends.filter(friend => {
+          if (typeof friend === 'string') {
+            return friend !== selectedFriend.phone;
+          } else {
+            return friend.phone !== selectedFriend.phone;
+          }
+        });
+  
         await updateDoc(userDocRef, { friends: updatedFriends });
         
         // Update local state
-        setFriends(friends.filter(f => f.phone !== selectedFriend.phone));
-        setFilteredFriends(filteredFriends.filter(f => f.phone !== selectedFriend.phone));
+        const updatedLocalFriends = friends.filter(f => f.phone !== selectedFriend.phone);
+        setFriends(updatedLocalFriends);
+        setFilteredFriends(updatedLocalFriends);
         
         Alert.alert('Success', `${selectedFriend.name} removed from contacts`);
       }
